@@ -37,8 +37,11 @@ class CSL_Dataset(Dataset):
     def read_images(self, folder_path):
         assert len(os.listdir(folder_path)) >= self.frames, "Too few images in your data folder!!!"
         images = []
+        # ignore the first image
+        start = 2
+        step = int(((len(os.listdir(folder_path))-1))/self.frames)
         for i in range(self.frames):
-            image = Image.open(os.path.join(folder_path, '{:06d}.jpg').format(i+1)).convert('L')
+            image = Image.open(os.path.join(folder_path, '{:06d}.jpg').format(start+step*i)).convert('L')
             if self.transform is not None:
                 image = self.transform(image)
             # print(image.squeeze(0).shape)
@@ -58,16 +61,22 @@ class CSL_Dataset(Dataset):
         # print(selected_folder)
         images = self.read_images(selected_folder)
         # print(self.labels['{:06d}'.format(int(idx/self.videos_per_folder))])
-        label = self.labels['{:06d}'.format(int(idx/self.videos_per_folder))]
+        # label = self.labels['{:06d}'.format(int(idx/self.videos_per_folder))]
+        label = torch.LongTensor([int(idx/self.videos_per_folder)])
 
         return {'images': images, 'label': label}
+
+    def label_to_word(self, label):
+        return self.labels['{:06d}'.format(label.item())]
 
 
 # Test
 if __name__ == '__main__':
-    transform = transforms.Compose([transforms.ToTensor()])
+    transform = transforms.Compose([transforms.Resize([90, 120]), transforms.ToTensor()])
     dataset = CSL_Dataset(data_path="/media/zjunlict/TOSHIBA1/dataset/SLR_dataset/S500_color_video", 
         label_path='/media/zjunlict/TOSHIBA1/dataset/SLR_dataset/dictionary.txt', transform=transform)
     print(len(dataset))
     print(dataset[1000])
+    label = dataset[1000]['label']
+    print(dataset.label_to_word(label))
 
