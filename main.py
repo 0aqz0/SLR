@@ -18,7 +18,7 @@ max_epochs = 1
 
 if __name__ == '__main__':
     # Train with 3DCNN
-    transform = transform = transforms.Compose([transforms.Resize([60, 64]), transforms.ToTensor(),
+    transform = transforms.Compose([transforms.Resize([60, 64]), transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
     dataset = CSL_Dataset(data_path="/media/zjunlict/TOSHIBA1/dataset/SLR_dataset/S500_color_video",
         label_path='/media/zjunlict/TOSHIBA1/dataset/SLR_dataset/dictionary.txt', transform=transform)
@@ -51,9 +51,9 @@ if __name__ == '__main__':
 
             # calculate the loss
             running_loss += loss.item()
-            if i % 5 == 4:
-                print("epoch {}, iteration {:5d}, Loss {}".format(epoch+1, i+1, running_loss/5))
-                writer.add_scalar('training loss', running_loss/5, i+1)
+            if i % 10 == 9:
+                print("epoch {} | iteration {:5d} | Loss {}".format(epoch+1, i+1, running_loss/10))
+                writer.add_scalar('training loss', running_loss/10, i+1)
                 running_loss = 0.0
 
     print("Training Finished".center(40, '#'))
