@@ -7,7 +7,7 @@ import torch.nn.functional as F
 Implementation of 3D CNN.
 """
 class CNN3D(nn.Module):
-    def __init__(self, img_depth=30, img_height=90, img_width=120, num_classes=500):
+    def __init__(self, img_depth=30, img_height=60, img_width=64, num_classes=500):
         super(CNN3D, self).__init__()
         self.img_depth = img_depth
         self.img_height = img_height
@@ -31,7 +31,7 @@ class CNN3D(nn.Module):
 
         # network architecture
         # in_channels=1 for grayscale
-        self.conv1 = nn.Conv3d(in_channels=1, out_channels=self.ch1, kernel_size=self.k1,
+        self.conv1 = nn.Conv3d(in_channels=3, out_channels=self.ch1, kernel_size=self.k1,
             stride=self.s1, padding=self.p1, dilation=self.d1)
         self.bn1 = nn.BatchNorm3d(self.ch1)
         self.conv2 = nn.Conv3d(in_channels=self.ch1, out_channels=self.ch2, kernel_size=self.k2,
@@ -77,8 +77,9 @@ class CNN3D(nn.Module):
 if __name__ == '__main__':
     import torchvision.transforms as transforms
     from dataset import CSL_Dataset
-    transform = transforms.Compose([transforms.Resize([90, 120]), transforms.ToTensor()])
+    transform = transforms.Compose([transforms.Resize([60, 64]), transforms.ToTensor()])
     dataset = CSL_Dataset(data_path="/media/zjunlict/TOSHIBA1/dataset/SLR_dataset/S500_color_video", 
         label_path='/media/zjunlict/TOSHIBA1/dataset/SLR_dataset/dictionary.txt', transform=transform)
     cnn3d = CNN3D()
-    print(cnn3d(dataset[0]['images'].unsqueeze(0).unsqueeze(0)))
+    print(dataset[0]['images'].unsqueeze(0).shape)
+    print(cnn3d(dataset[0]['images'].unsqueeze(0)))

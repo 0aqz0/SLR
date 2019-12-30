@@ -41,12 +41,16 @@ class CSL_Dataset(Dataset):
         start = 2
         step = int(((len(os.listdir(folder_path))-1))/self.frames)
         for i in range(self.frames):
-            image = Image.open(os.path.join(folder_path, '{:06d}.jpg').format(start+step*i)).convert('L')
+            image = Image.open(os.path.join(folder_path, '{:06d}.jpg').format(start+step*i))
+            # crop the image using Pillow
+            image = image.crop([384, 240, 896, 720])
             if self.transform is not None:
                 image = self.transform(image)
             # print(image.squeeze(0).shape)
             images.append(image.squeeze(0))
         images = torch.stack(images, dim=0)
+        # switch dimension for 3d cnn
+        images = images.permute(1, 0, 2, 3)
         # print(images.shape)
         return images
 
@@ -72,7 +76,7 @@ class CSL_Dataset(Dataset):
 
 # Test
 if __name__ == '__main__':
-    transform = transforms.Compose([transforms.Resize([90, 120]), transforms.ToTensor()])
+    transform = transforms.Compose([transforms.Resize([60, 64]), transforms.ToTensor()])
     dataset = CSL_Dataset(data_path="/media/zjunlict/TOSHIBA1/dataset/SLR_dataset/S500_color_video", 
         label_path='/media/zjunlict/TOSHIBA1/dataset/SLR_dataset/dictionary.txt', transform=transform)
     print(len(dataset))
