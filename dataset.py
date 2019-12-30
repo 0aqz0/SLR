@@ -8,7 +8,7 @@ import torchvision.transforms as transforms
 Implementation of Chinese Sign Language Dataset
 """
 class CSL_Dataset(Dataset):
-    def __init__(self, data_path, label_path, frames=50, transform=None):
+    def __init__(self, data_path, label_path, frames=30, transform=None):
         super(CSL_Dataset, self).__init__()
         self.data_path = data_path
         self.label_path = label_path
