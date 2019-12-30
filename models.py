@@ -7,7 +7,7 @@ import torch.nn.functional as F
 Implementation of 3D CNN.
 """
 class CNN3D(nn.Module):
-    def __init__(self, img_depth=50, img_height=90, img_width=120, num_classes=500):
+    def __init__(self, img_depth=30, img_height=90, img_width=120, num_classes=500):
         super(CNN3D, self).__init__()
         self.img_depth = img_depth
         self.img_height = img_height
