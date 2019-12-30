@@ -60,9 +60,10 @@ class CSL_Dataset(Dataset):
         # print(self.labels['{:06d}'.format(int(idx/self.videos_per_folder))])
         label = self.labels['{:06d}'.format(int(idx/self.videos_per_folder))]
 
-        return images, label
+        return {'images': images, 'label': label}
 
 
+# Test
 if __name__ == '__main__':
     transform = transforms.Compose([transforms.ToTensor()])
     dataset = CSL_Dataset(data_path="/media/zjunlict/TOSHIBA1/dataset/SLR_dataset/S500_color_video", 
