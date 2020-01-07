@@ -7,7 +7,7 @@ import torch.nn.functional as F
 Implementation of 3D CNN.
 """
 class CNN3D(nn.Module):
-    def __init__(self, img_depth=30, img_height=64, img_width=48, num_classes=10):
+    def __init__(self, img_depth=16, img_height=64, img_width=48, num_classes=10):
         super(CNN3D, self).__init__()
         self.img_depth = img_depth
         self.img_height = img_height
@@ -20,7 +20,7 @@ class CNN3D(nn.Module):
         self.s1, self.s2, self.s3 = (1,1,1), (1,1,1), (1,1,1)
         self.p1, self.p2, self.p3 = (0,0,0), (0,0,0), (0,0,0)
         self.d1, self.d2, self.d3 = (1,1,1), (1,1,1), (1,1,1)
-        self.hidden1, self.hidden2 = 200, 256
+        self.hidden1, self.hidden2 = 512, 256
         self.drop_p = 0.2
         self.pool_k, self.pool_s, self.pool_p, self.pool_d = (1,2,2), (1,2,2), (0,0,0), (1,1,1)
         # Conv1
@@ -36,7 +36,7 @@ class CNN3D(nn.Module):
         # Conv3
         self.conv3_output_shape = self.compute_output_shape(self.conv2_output_shape[0], self.conv2_output_shape[1], 
             self.conv2_output_shape[2], self.k3, self.s3, self.p3, self.d3)
-        # print(self.conv1_output_shape, self.conv2_output_shape, self.conv3_output_shape)
+        print(self.conv1_output_shape, self.conv2_output_shape, self.conv3_output_shape)
 
         # network architecture
         # in_channels=1 for grayscale
@@ -53,9 +53,9 @@ class CNN3D(nn.Module):
         self.drop = nn.Dropout3d(p=self.drop_p)
         self.pool = nn.MaxPool3d(kernel_size=self.pool_k)
         self.fc1 = nn.Linear(self.ch3 * self.conv3_output_shape[0] * self.conv3_output_shape[1] * self.conv3_output_shape[2], self.hidden1)
-        # self.fc2 = nn.Linear(self.hidden1, self.hidden2)
-        self.fc2 = nn.Linear(self.hidden1, self.num_classes)
-        # self.fc3 = nn.Linear(self.hidden2, self.num_classes)
+        self.fc2 = nn.Linear(self.hidden1, self.hidden2)
+        self.fc3 = nn.Linear(self.hidden2, self.num_classes)
+        self.apply(self.init_weights)
 
     def forward(self, x):
         # Conv1
@@ -82,7 +82,7 @@ class CNN3D(nn.Module):
         x = F.relu(self.fc1(x))
         x = F.relu(self.fc2(x))
         # x = F.dropout(x, p=self.drop_p, training=self.training)
-        # x = self.fc3(x)
+        x = self.fc3(x)
 
         return x
 
@@ -94,6 +94,11 @@ class CNN3D(nn.Module):
         
         return D_out, H_out, W_out
 
+    def init_weights(self, m):
+        if type(m) == nn.Linear:
+            torch.nn.init.xavier_uniform_(m.weight)
+            m.bias.data.fill_(0.01)
+
 # Test
 if __name__ == '__main__':
     import torchvision.transforms as transforms
@@ -102,5 +107,5 @@ if __name__ == '__main__':
     dataset = CSL_Dataset(data_path="/home/ddq/Data/origin/S500_color_video",
         label_path='/home/ddq/Data/origin/dictionary.txt', transform=transform)
     cnn3d = CNN3D()
-    print(dataset[0]['images'].unsqueeze(0).shape)
+    print(dataset[0]['images'].shape)
     print(cnn3d(dataset[0]['images'].unsqueeze(0)))

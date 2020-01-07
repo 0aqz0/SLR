@@ -8,7 +8,7 @@ import torchvision.transforms as transforms
 Implementation of Chinese Sign Language Dataset
 """
 class CSL_Dataset(Dataset):
-    def __init__(self, data_path, label_path, frames=30, transform=None):
+    def __init__(self, data_path, label_path, frames=16, transform=None):
         super(CSL_Dataset, self).__init__()
         self.data_path = data_path
         self.label_path = label_path
@@ -46,8 +46,8 @@ class CSL_Dataset(Dataset):
             image = image.crop([384, 240, 896, 720])
             if self.transform is not None:
                 image = self.transform(image)
-            # print(image.squeeze(0).shape)
-            images.append(image.squeeze(0))
+            images.append(image)
+
         images = torch.stack(images, dim=0)
         # switch dimension for 3d cnn
         images = images.permute(1, 0, 2, 3)
@@ -81,7 +81,7 @@ if __name__ == '__main__':
     dataset = CSL_Dataset(data_path="/home/ddq/Data/origin/S500_color_video",
         label_path='/home/ddq/Data/origin/dictionary.txt', transform=transform)
     print(len(dataset))
-    print(dataset[1000])
+    print(dataset[1000]['images'].shape)
     label = dataset[1000]['label']
     print(dataset.label_to_word(label))
 
