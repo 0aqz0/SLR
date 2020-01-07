@@ -55,7 +55,8 @@ class CSL_Dataset(Dataset):
         return images
 
     def __len__(self):
-        return len(self.data_folder) * self.videos_per_folder
+        return 500
+        # return len(self.data_folder) * self.videos_per_folder
 
     def __getitem__(self, idx):
         top_folder = self.data_folder[int(idx/self.videos_per_folder)]
@@ -76,9 +77,9 @@ class CSL_Dataset(Dataset):
 
 # Test
 if __name__ == '__main__':
-    transform = transforms.Compose([transforms.Resize([60, 64]), transforms.ToTensor()])
-    dataset = CSL_Dataset(data_path="/media/zjunlict/TOSHIBA1/dataset/SLR_dataset/S500_color_video", 
-        label_path='/media/zjunlict/TOSHIBA1/dataset/SLR_dataset/dictionary.txt', transform=transform)
+    transform = transforms.Compose([transforms.Resize([64, 48]), transforms.ToTensor()])
+    dataset = CSL_Dataset(data_path="/home/ddq/Data/origin/S500_color_video",
+        label_path='/home/ddq/Data/origin/dictionary.txt', transform=transform)
     print(len(dataset))
     print(dataset[1000])
     label = dataset[1000]['label']

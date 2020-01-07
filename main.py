@@ -12,16 +12,16 @@ PATH = './slr_cnn3d.pth'
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Hyperparams
-batch_size = 64
-learning_rate = 1e-2
-max_epochs = 1
+batch_size = 16
+learning_rate = 1e-3
+max_epochs = 16
 
 if __name__ == '__main__':
     # Train with 3DCNN
-    transform = transforms.Compose([transforms.Resize([60, 64]), transforms.ToTensor(),
+    transform = transforms.Compose([transforms.Resize([64, 48]), transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])])
-    dataset = CSL_Dataset(data_path="/media/zjunlict/TOSHIBA1/dataset/SLR_dataset/S500_color_video",
-        label_path='/media/zjunlict/TOSHIBA1/dataset/SLR_dataset/dictionary.txt', transform=transform)
+    dataset = CSL_Dataset(data_path="/home/ddq/Data/origin/S500_color_video",
+        label_path='/home/ddq/Data/origin/dictionary.txt', transform=transform)
     print("Dataset samples: {}".format(len(dataset)))
     trainloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4)
     cnn3d = CNN3D()
@@ -32,6 +32,8 @@ if __name__ == '__main__':
     print("Training Started".center(40, '#'))
     for epoch in range(max_epochs):
         running_loss = 0.0
+        running_acc = 0.0
+        iteration_count = 0
 
         for i, data in enumerate(trainloader):
             # get the inputs and labels
@@ -46,15 +48,27 @@ if __name__ == '__main__':
             # print(inputs.size(), labels.size(), outputs.size())
             # print(torch.max(outputs, 1)[1].size(), labels.squeeze().size())
             loss = criterion(outputs, labels.squeeze())
+            # print(outputs, labels.squeeze())
             loss.backward()
             optimizer.step()
 
             # calculate the loss
             running_loss += loss.item()
-            if i % 10 == 9:
-                print("epoch {} | iteration {:5d} | Loss {}".format(epoch+1, i+1, running_loss/10))
-                writer.add_scalar('training loss', running_loss/10, i+1)
+
+            # calculate the acc
+            acc = torch.sum((torch.argmax(outputs, 1) == labels)) / batch_size
+            # print(outputs, labels)
+            # print((torch.argmax(outputs, 1)))
+            # count iteration
+            iteration_count += 1
+
+            if i % 4 == 3:
+                print("epoch {} | iteration {:5d} | Loss {} | Acc {}".format(epoch+1, i+1, running_loss/4, acc))
+                writer.add_scalar('training loss', running_loss/4, i+1)
                 running_loss = 0.0
+
+        # print log file
+        # print("Epoch {} | Loss {} | Acc {}".format(epoch, running_loss / iteration, running_acc / iteration))
 
     print("Training Finished".center(40, '#'))
 
