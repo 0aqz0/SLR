@@ -8,7 +8,7 @@ import torchvision.transforms as transforms
 Implementation of Chinese Sign Language Dataset
 """
 class CSL_Dataset(Dataset):
-    def __init__(self, data_path, label_path, frames=16, transform=None):
+    def __init__(self, data_path, label_path, frames=25, transform=None):
         super(CSL_Dataset, self).__init__()
         self.data_path = data_path
         self.label_path = label_path
@@ -35,13 +35,13 @@ class CSL_Dataset(Dataset):
             raise
 
     def read_images(self, folder_path):
-        assert len(os.listdir(folder_path)) >= self.frames, "Too few images in your data folder!!!"
+        assert len(os.listdir(folder_path)) >= self.frames, "Too few images in your data folder: " + str(folder_path)
         images = []
         # ignore the first image
         start = 2
         step = int(((len(os.listdir(folder_path))-1))/self.frames)
         for i in range(self.frames):
-            image = Image.open(os.path.join(folder_path, '{:06d}.jpg').format(start+step*i))
+            image = Image.open(os.path.join(folder_path, '{:06d}.jpg').format(start+i*step)).convert('L')
             # crop the image using Pillow
             image = image.crop([384, 240, 896, 720])
             if self.transform is not None:
@@ -55,7 +55,7 @@ class CSL_Dataset(Dataset):
         return images
 
     def __len__(self):
-        return 500
+        return 50*100
         # return len(self.data_folder) * self.videos_per_folder
 
     def __getitem__(self, idx):
@@ -77,11 +77,10 @@ class CSL_Dataset(Dataset):
 
 # Test
 if __name__ == '__main__':
-    transform = transforms.Compose([transforms.Resize([64, 48]), transforms.ToTensor()])
-    dataset = CSL_Dataset(data_path="/home/ddq/Data/origin/S500_color_video",
-        label_path='/home/ddq/Data/origin/dictionary.txt', transform=transform)
+    transform = transforms.Compose([transforms.Resize([128, 96]), transforms.ToTensor()])
+    dataset = CSL_Dataset(data_path="/home/ddq/Data/CSL_Dataset/S500_color_video",
+        label_path='/home/ddq/Data/CSL_Dataset/dictionary.txt', transform=transform)
     print(len(dataset))
     print(dataset[1000]['images'].shape)
     label = dataset[1000]['label']
     print(dataset.label_to_word(label))
-
