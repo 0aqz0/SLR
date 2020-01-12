@@ -1,8 +1,9 @@
+import os
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 from torch.utils.tensorboard import SummaryWriter
 import torchvision.transforms as transforms
 from sklearn.metrics import accuracy_score
@@ -12,7 +13,7 @@ from dataset import CSL_Dataset
 # Path setting
 data_path = "/home/ddq/Data/CSL_Dataset/S500_color_video"
 label_path = "/home/ddq/Data/CSL_Dataset/dictionary.txt"
-model_path = "./slr_cnn3d.pth"
+model_path = "."
 log_path = "./log.txt"
 
 # Device setting
@@ -36,8 +37,10 @@ if __name__ == '__main__':
                                     transforms.ToTensor(),
                                     transforms.Normalize(mean=[0.5], std=[0.5])])
     dataset = CSL_Dataset(data_path=data_path, label_path=label_path, frames=img_d, transform=transform)
+    trainset, testset = random_split(dataset, [int(0.8*len(dataset)), int(0.2*len(dataset))])
     print("Dataset samples: {}".format(len(dataset)))
-    trainloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
+    trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
+    testloader = DataLoader(testset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     # Create model
     cnn3d = CNN3D(img_depth=img_d, img_height=img_h, img_width=img_w, drop_p=drop_p,
                 hidden1=hidden1, hidden2=hidden2, num_classes=num_classes).to(device)
@@ -48,44 +51,75 @@ if __name__ == '__main__':
     # Create loss criterion & optimizer & log writer
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(cnn3d.parameters(), lr=learning_rate)
-    # writer = SummaryWriter('runs/slr')
+    writer = SummaryWriter('runs/slr')
     # log = open(log_path, "w")
 
     # Start training
-    print("Training Started".center(80, '#'))
+    print("Training Started".center(60, '#'))
     for epoch in range(epochs):
         # Set trainning mode
         cnn3d.train()
 
-        running_loss = 0.0
+        losses = []
 
-        for i, data in enumerate(trainloader):
+        for batch_idx, data in enumerate(trainloader):
             # get the inputs and labels
             inputs, labels = data['images'].to(device), data['label'].to(device)
 
             optimizer.zero_grad()
-            # forward & backward & optimize
+            # forward
             outputs = cnn3d(inputs)
-            loss = F.cross_entropy(outputs, labels.squeeze())
 
             # compute the loss
-            running_loss += loss.item()
+            loss = criterion(outputs, labels.squeeze())
+            losses.append(loss.item())
 
             # compute the accuracy
             prediction = torch.max(outputs, 1)[1]
             score = accuracy_score(labels.squeeze().cpu().data.squeeze().numpy(), prediction.cpu().data.squeeze().numpy())
 
+            # backward & optimize
             loss.backward()
             optimizer.step()
 
-            if (i + 1) % log_interval == 0:
-                print("epoch {:3d} | iteration {:5d} | Loss {:.6f} | Acc {:.2f}%".format(epoch+1, i+1, loss.item(), score*100))
-                # writer.add_scalar('training loss', running_loss/4, i+1)
-                running_loss = 0.0
-                acc = 0.0
+            if (batch_idx + 1) % log_interval == 0:
+                print("epoch {:3d} | iteration {:5d} | Loss {:.6f} | Acc {:.2f}%".format(epoch+1, batch_idx+1, loss.item(), score*100))
 
-    print("Training Finished".center(80, '#'))
+        # Log
+        training_loss = sum(losses)/len(losses)
+        writer.add_scalar('training loss', training_loss, epoch+1)
+        print("Average Training Loss of Epoch {}: {:.6f}".format(epoch+1, training_loss))
+        # Save model
+        torch.save(cnn3d.state_dict(), os.path.join(model_path, "slr_cnn3d_epoch{}.pth".format(epoch+1)))
+        print("Epoch {} Model Saved".format(epoch+1).center(60, '#'))
 
-    # Save model
-    torch.save(cnn3d.state_dict(), model_path)
-    print("Model Saved".center(80, '#'))
+        # Test the model
+        # Set testing mode
+        cnn3d.eval()
+        losses = []
+        all_label = []
+        all_pred = []
+
+        with torch.no_grad():
+            for batch_idx, data in enumerate(testloader):
+                # get the inputs and labels
+                inputs, labels = data['images'].to(device), data['label'].to(device)
+                # forward
+                outputs = cnn3d(inputs)
+                # compute the loss
+                loss = criterion(outputs, labels.squeeze())
+                losses.append(loss.item())
+                # collect labels & prediction
+                prediction = torch.max(outputs, 1)[1]
+                all_label.extend(labels.squeeze())
+                all_pred.extend(prediction)
+        # Compute the average loss & accuracy
+        testing_loss = sum(losses)/len(losses)
+        all_label = torch.stack(all_label, dim=0)
+        all_pred = torch.stack(all_pred, dim=0)
+        score = accuracy_score(all_label.squeeze().cpu().data.squeeze().numpy(), all_pred.cpu().data.squeeze().numpy())
+        # Log
+        writer.add_scalar('testing loss', testing_loss, epoch+1)
+        print("Average Testing Loss of Epoch {}: {:.6f} | Acc: {:.2f}%".format(epoch+1, testing_loss, score*100))
+
+    print("Training Finished".center(60, '#'))
