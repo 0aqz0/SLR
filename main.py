@@ -1,4 +1,5 @@
 import os
+import sys
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -15,6 +16,13 @@ data_path = "/home/ddq/Data/CSL_Dataset/S500_color_video"
 label_path = "/home/ddq/Data/CSL_Dataset/dictionary.txt"
 model_path = "."
 log_path = "./log.txt"
+
+# Log to file
+log_to_file = True
+if log_to_file:
+    log = open(log_path, "w")
+    sys.stdout = log
+    print("Logging to file...")
 
 # Device setting
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -48,11 +56,10 @@ if __name__ == '__main__':
     if torch.cuda.device_count() > 1:
         print("Using {} GPUs".format(torch.cuda.device_count()))
         cnn3d = nn.DataParallel(cnn3d)
-    # Create loss criterion & optimizer & log writer
+    # Create loss criterion & optimizer & tensorboard writer
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(cnn3d.parameters(), lr=learning_rate)
     writer = SummaryWriter('runs/slr')
-    # log = open(log_path, "w")
 
     # Start training
     print("Training Started".center(60, '#'))
@@ -89,9 +96,6 @@ if __name__ == '__main__':
         training_loss = sum(losses)/len(losses)
         writer.add_scalar('training loss', training_loss, epoch+1)
         print("Average Training Loss of Epoch {}: {:.6f}".format(epoch+1, training_loss))
-        # Save model
-        torch.save(cnn3d.state_dict(), os.path.join(model_path, "slr_cnn3d_epoch{}.pth".format(epoch+1)))
-        print("Epoch {} Model Saved".format(epoch+1).center(60, '#'))
 
         # Test the model
         # Set testing mode
@@ -121,5 +125,9 @@ if __name__ == '__main__':
         # Log
         writer.add_scalar('testing loss', testing_loss, epoch+1)
         print("Average Testing Loss of Epoch {}: {:.6f} | Acc: {:.2f}%".format(epoch+1, testing_loss, score*100))
+
+        # Save model
+        torch.save(cnn3d.state_dict(), os.path.join(model_path, "slr_cnn3d_epoch{}.pth".format(epoch+1)))
+        print("Epoch {} Model Saved".format(epoch+1).center(60, '#'))
 
     print("Training Finished".center(60, '#'))
