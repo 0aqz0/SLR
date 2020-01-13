@@ -17,8 +17,8 @@ class CNN3D(nn.Module):
 
         # network params
         self.ch1, self.ch2, self.ch3 = 32, 48, 48
-        self.k1, self.k2, self.k3 = (5,5,5), (3,3,3), (3,5,5)
-        self.s1, self.s2, self.s3 = (2,2,2), (2,2,2), (1,1,1)
+        self.k1, self.k2, self.k3 = (5,7,7), (3,7,7), (3,5,5)
+        self.s1, self.s2, self.s3 = (2,2,2), (2,2,2), (2,2,2)
         self.p1, self.p2, self.p3 = (0,0,0), (0,0,0), (0,0,0)
         self.d1, self.d2, self.d3 = (1,1,1), (1,1,1), (1,1,1)
         self.hidden1, self.hidden2 = hidden1, hidden2
@@ -35,8 +35,8 @@ class CNN3D(nn.Module):
         # self.conv2_output_shape = self.compute_output_shape(self.conv2_output_shape[0], self.conv2_output_shape[1], 
         #     self.conv2_output_shape[2], self.pool_k, self.pool_s, self.pool_p, self.pool_d)
         # Conv3
-        # self.conv3_output_shape = self.compute_output_shape(self.conv2_output_shape[0], self.conv2_output_shape[1], 
-        #     self.conv2_output_shape[2], self.k3, self.s3, self.p3, self.d3)
+        self.conv3_output_shape = self.compute_output_shape(self.conv2_output_shape[0], self.conv2_output_shape[1],
+            self.conv2_output_shape[2], self.k3, self.s3, self.p3, self.d3)
         # print(self.conv1_output_shape, self.conv2_output_shape, self.conv3_output_shape)
 
         # network architecture
@@ -47,16 +47,15 @@ class CNN3D(nn.Module):
         self.conv2 = nn.Conv3d(in_channels=self.ch1, out_channels=self.ch2, kernel_size=self.k2,
             stride=self.s2, padding=self.p2, dilation=self.d2)
         self.bn2 = nn.BatchNorm3d(self.ch2)
-        # self.conv3 = nn.Conv3d(in_channels=self.ch2, out_channels=self.ch3, kernel_size=self.k3,
-        #     stride=self.s3, padding=self.p3, dilation=self.d3)
-        # self.bn3 = nn.BatchNorm3d(self.ch3)
+        self.conv3 = nn.Conv3d(in_channels=self.ch2, out_channels=self.ch3, kernel_size=self.k3,
+            stride=self.s3, padding=self.p3, dilation=self.d3)
+        self.bn3 = nn.BatchNorm3d(self.ch3)
         self.relu = nn.ReLU(inplace=True)
         self.drop = nn.Dropout3d(p=self.drop_p)
         self.pool = nn.MaxPool3d(kernel_size=self.pool_k)
-        self.fc1 = nn.Linear(self.ch2 * self.conv2_output_shape[0] * self.conv2_output_shape[1] * self.conv2_output_shape[2], self.hidden1)
+        self.fc1 = nn.Linear(self.ch3 * self.conv3_output_shape[0] * self.conv3_output_shape[1] * self.conv3_output_shape[2], self.hidden1)
         self.fc2 = nn.Linear(self.hidden1, self.hidden2)
         self.fc3 = nn.Linear(self.hidden2, self.num_classes)
-        # self.apply(self.init_weights)
 
     def forward(self, x):
         # Conv1
@@ -72,10 +71,10 @@ class CNN3D(nn.Module):
         # x = self.pool(x)
         x = self.drop(x)
         # Conv3
-        # x = self.conv3(x)
-        # x = self.bn3(x)
-        # x = self.relu(x)
-        # x = self.drop(x)
+        x = self.conv3(x)
+        x = self.bn3(x)
+        x = self.relu(x)
+        x = self.drop(x)
         # # MLP
         # print(x.shape)
         # x.size(0) ------ batch_size
@@ -94,11 +93,6 @@ class CNN3D(nn.Module):
         W_out = np.floor((W_in + 2*p[2] - d[2]*(k[2] - 1) - 1)/s[2] + 1).astype(int)
         
         return D_out, H_out, W_out
-
-    def init_weights(self, m):
-        if type(m) == nn.Linear:
-            torch.nn.init.xavier_uniform_(m.weight)
-            m.bias.data.fill_(0.01)
 
 
 # class C3D(nn.Module):

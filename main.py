@@ -1,5 +1,6 @@
 import os
 import sys
+from datetime import datetime
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -15,14 +16,16 @@ from dataset import CSL_Dataset
 data_path = "/home/ddq/Data/CSL_Dataset/S500_color_video"
 label_path = "/home/ddq/Data/CSL_Dataset/dictionary.txt"
 model_path = "."
-log_path = "./log.txt"
+log_path = "./log{:_%Y-%m-%d_%H-%M-%S}.txt".format(datetime.now())
+sum_path = "runs/slr{:_%Y-%m-%d_%H-%M-%S}".format(datetime.now())
 
-# Log to file
+# Log to file & tensorboard writer
 log_to_file = True
 if log_to_file:
     log = open(log_path, "w")
     sys.stdout = log
     print("Logging to file...")
+writer = SummaryWriter(sum_path)
 
 # Device setting
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -30,12 +33,12 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Hyperparams
 num_classes = 100
 epochs = 15
-batch_size = 30
+batch_size = 32
 learning_rate = 1e-4
 log_interval = 10
 img_d, img_h, img_w = 25, 128, 96
 drop_p = 0.0
-hidden1, hidden2 = 256, 256
+hidden1, hidden2 = 512, 256
 
 
 if __name__ == '__main__':
@@ -56,10 +59,9 @@ if __name__ == '__main__':
     if torch.cuda.device_count() > 1:
         print("Using {} GPUs".format(torch.cuda.device_count()))
         cnn3d = nn.DataParallel(cnn3d)
-    # Create loss criterion & optimizer & tensorboard writer
+    # Create loss criterion & optimizer
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(cnn3d.parameters(), lr=learning_rate)
-    writer = SummaryWriter('runs/slr')
 
     # Start training
     print("Training Started".center(60, '#'))
@@ -94,7 +96,7 @@ if __name__ == '__main__':
 
         # Log
         training_loss = sum(losses)/len(losses)
-        writer.add_scalar('training loss', training_loss, epoch+1)
+        writer.add_scalar('Loss/train', training_loss, epoch+1)
         print("Average Training Loss of Epoch {}: {:.6f}".format(epoch+1, training_loss))
 
         # Test the model
@@ -123,7 +125,7 @@ if __name__ == '__main__':
         all_pred = torch.stack(all_pred, dim=0)
         score = accuracy_score(all_label.squeeze().cpu().data.squeeze().numpy(), all_pred.cpu().data.squeeze().numpy())
         # Log
-        writer.add_scalar('testing loss', testing_loss, epoch+1)
+        writer.add_scalar('Loss/test', testing_loss, epoch+1)
         print("Average Testing Loss of Epoch {}: {:.6f} | Acc: {:.2f}%".format(epoch+1, testing_loss, score*100))
 
         # Save model
