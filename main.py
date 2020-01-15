@@ -32,7 +32,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyperparams
 num_classes = 100
-epochs = 15
+epochs = 30
 batch_size = 32
 learning_rate = 1e-4
 log_interval = 10
@@ -68,8 +68,9 @@ if __name__ == '__main__':
     for epoch in range(epochs):
         # Set trainning mode
         cnn3d.train()
-
         losses = []
+        all_label = []
+        all_pred = []
 
         for batch_idx, data in enumerate(trainloader):
             # get the inputs and labels
@@ -85,6 +86,8 @@ if __name__ == '__main__':
 
             # compute the accuracy
             prediction = torch.max(outputs, 1)[1]
+            all_label.extend(labels.squeeze())
+            all_pred.extend(prediction)
             score = accuracy_score(labels.squeeze().cpu().data.squeeze().numpy(), prediction.cpu().data.squeeze().numpy())
 
             # backward & optimize
@@ -94,10 +97,15 @@ if __name__ == '__main__':
             if (batch_idx + 1) % log_interval == 0:
                 print("epoch {:3d} | iteration {:5d} | Loss {:.6f} | Acc {:.2f}%".format(epoch+1, batch_idx+1, loss.item(), score*100))
 
-        # Log
+        # Compute the average loss & accuracy
         training_loss = sum(losses)/len(losses)
+        all_label = torch.stack(all_label, dim=0)
+        all_pred = torch.stack(all_pred, dim=0)
+        training_acc = accuracy_score(all_label.squeeze().cpu().data.squeeze().numpy(), all_pred.cpu().data.squeeze().numpy())
+        # Log
         writer.add_scalar('Loss/train', training_loss, epoch+1)
-        print("Average Training Loss of Epoch {}: {:.6f}".format(epoch+1, training_loss))
+        writer.add_scalar('Accuracy/train', training_acc, epoch+1)
+        print("Average Training Loss of Epoch {}: {:.6f} | Acc: {:.2f}%".format(epoch+1, training_loss, training_acc*100))
 
         # Test the model
         # Set testing mode
@@ -123,10 +131,11 @@ if __name__ == '__main__':
         testing_loss = sum(losses)/len(losses)
         all_label = torch.stack(all_label, dim=0)
         all_pred = torch.stack(all_pred, dim=0)
-        score = accuracy_score(all_label.squeeze().cpu().data.squeeze().numpy(), all_pred.cpu().data.squeeze().numpy())
+        testing_acc = accuracy_score(all_label.squeeze().cpu().data.squeeze().numpy(), all_pred.cpu().data.squeeze().numpy())
         # Log
         writer.add_scalar('Loss/test', testing_loss, epoch+1)
-        print("Average Testing Loss of Epoch {}: {:.6f} | Acc: {:.2f}%".format(epoch+1, testing_loss, score*100))
+        writer.add_scalar('Accuracy/test', testing_acc, epoch+1)
+        print("Average Testing Loss of Epoch {}: {:.6f} | Acc: {:.2f}%".format(epoch+1, testing_loss, testing_acc*100))
 
         # Save model
         torch.save(cnn3d.state_dict(), os.path.join(model_path, "slr_cnn3d_epoch{}.pth".format(epoch+1)))
