@@ -31,7 +31,7 @@ writer = SummaryWriter(sum_path)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyperparams
-num_classes = 100
+num_classes = 500
 epochs = 30
 batch_size = 32
 learning_rate = 1e-4
