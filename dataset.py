@@ -74,6 +74,25 @@ class CSL_Dataset(Dataset):
     def label_to_word(self, label):
         return self.labels['{:06d}'.format(label.item())]
 
+"""
+Implementation of CSL Skeleton Dataset
+"""
+class CSL_Skeleton(Dataset):
+    def __init__(self, data_path, label_path, frames=25, transform=None):
+        super(CSL_Skeleton, self).__init__()
+
+    def read_file(self, folder_path):
+        pass
+
+    def __len__(self):
+        pass
+
+    def __getitem__(self, idx):
+        pass
+
+    def label_to_word(self):
+        pass
+
 
 # Test
 if __name__ == '__main__':
