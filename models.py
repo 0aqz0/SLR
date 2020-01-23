@@ -8,7 +8,7 @@ import math
 Implementation of 3D CNN.
 """
 class CNN3D(nn.Module):
-    def __init__(self, img_depth=25, img_height=128, img_width=96, drop_p=0.2, hidden1=256, hidden2=256, num_classes=100):
+    def __init__(self, img_depth=25, img_height=128, img_width=96, drop_p=0.0, hidden1=512, hidden2=256, num_classes=100):
         super(CNN3D, self).__init__()
         self.img_depth = img_depth
         self.img_height = img_height
@@ -98,7 +98,7 @@ class CNN3D(nn.Module):
 Implementation of CNN+LSTM.
 """
 class CRNN(nn.Module):
-    def __init__(self, img_depth=25, img_height=128, img_width=96, drop_p=0.2, hidden1=256, hidden2=256, hidden3=256,
+    def __init__(self, img_depth=25, img_height=128, img_width=96, drop_p=0.0, hidden1=512, hidden2=256, hidden3=256,
                 cnn_embed_dim=512, lstm_hidden_size=512, lstm_num_layers=3, num_classes=100):
         super(CRNN, self).__init__()
         self.img_depth = img_depth
