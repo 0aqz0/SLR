@@ -55,8 +55,8 @@ class CSL_Dataset(Dataset):
         return images
 
     def __len__(self):
-        # return 100 * self.videos_per_folder
-        return len(self.data_folder) * self.videos_per_folder
+        return 100 * self.videos_per_folder
+        # return len(self.data_folder) * self.videos_per_folder
 
     def __getitem__(self, idx):
         top_folder = self.data_folder[int(idx/self.videos_per_folder)]
