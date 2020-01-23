@@ -95,76 +95,13 @@ class CNN3D(nn.Module):
         return D_out, H_out, W_out
 
 
-class C3D(nn.Module):
-    def __init__(self,
-                 num_classes=5):
-
-        super(C3D, self).__init__()
-        self.group1 = nn.Sequential(
-            nn.Conv3d(1, 64, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool3d(kernel_size=(1, 2, 2), stride=(1, 2, 2)))
-
-        self.group2 = nn.Sequential(
-            nn.Conv3d(64, 128, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2)))
-
-        self.group3 = nn.Sequential(
-            nn.Conv3d(128, 256, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv3d(256, 256, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2)))
-
-        self.group4 = nn.Sequential(
-            nn.Conv3d(256, 512, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv3d(512, 512, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2)))
-
-        self.group5 = nn.Sequential(
-            nn.Conv3d(512, 512, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.Conv3d(512, 512, kernel_size=3, padding=1),
-            nn.ReLU(),
-            nn.MaxPool3d(kernel_size=(2, 2, 2), stride=(2, 2, 2)))
-
-        # last_duration = int(math.floor(sample_duration / 16))
-        # last_size = int(math.floor(sample_size / 32))
-        self.fc1 = nn.Sequential(
-            # nn.Linear((512 * last_duration * last_size * last_size) , 2048),
-            nn.Linear(6144, 2048),
-            nn.ReLU(),
-            nn.Dropout(0.5))
-        self.fc2 = nn.Sequential(
-            nn.Linear(2048, 2048),
-            nn.ReLU(),
-            nn.Dropout(0.5))
-        self.fc = nn.Sequential(
-            nn.Linear(2048, num_classes))
-
-    def forward(self, x):
-        out = self.group1(x)
-        out = self.group2(out)
-        out = self.group3(out)
-        out = self.group4(out)
-        out = self.group5(out)
-        out = out.view(out.size(0), -1)
-        print(out.shape)
-        out = self.fc1(out)
-        out = self.fc2(out)
-        out = self.fc(out)
-        return out
-
 # Test
 if __name__ == '__main__':
     import torchvision.transforms as transforms
     from dataset import CSL_Dataset
     transform = transforms.Compose([transforms.Resize([128, 96]), transforms.ToTensor()])
-    dataset = CSL_Dataset(data_path="/home/ddq/Data/CSL_Dataset/S500_color_video",
-        label_path='/home/ddq/Data/CSL_Dataset/dictionary.txt', transform=transform)
-    cnn3d = C3D()
+    dataset = CSL_Dataset(data_path="/home/haodong/Data/CSL_Dataset/S500_color_video",
+        label_path='/home/haodong/Data/CSL_Dataset/dictionary.txt', transform=transform)
+    cnn3d = CNN3D()
     # print(dataset[0]['images'].shape)
     print(cnn3d(dataset[0]['images'].unsqueeze(0)))
