@@ -27,6 +27,8 @@ if log_to_file:
     print("Logging to file...")
 writer = SummaryWriter(sum_path)
 
+# Use specific gpus
+os.environ["CUDA_VISIBLE_DEVICES"]="1, 2"
 # Device setting
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -55,8 +57,6 @@ if __name__ == '__main__':
     model = CRNN(img_depth=img_d, img_height=img_h, img_width=img_w, num_classes=num_classes).to(device)
     # Run the model parallelly
     if torch.cuda.device_count() > 1:
-        # Use specific gpus
-        os.environ["CUDA_VISIBLE_DEVICES"]="1, 2"
         print("Using {} GPUs".format(torch.cuda.device_count()))
         model = nn.DataParallel(model)
     # Create loss criterion & optimizer
