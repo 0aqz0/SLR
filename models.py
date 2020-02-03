@@ -212,12 +212,12 @@ class CRNN(nn.Module):
 # Test
 if __name__ == '__main__':
     import torchvision.transforms as transforms
-    from dataset import CSL_Dataset
+    from dataset import CSL_Isolated
     transform = transforms.Compose([transforms.Resize([128, 96]), transforms.ToTensor()])
-    dataset = CSL_Dataset(data_path="/home/haodong/Data/CSL_Dataset/S500_color_video",
-        label_path='/home/haodong/Data/CSL_Dataset/dictionary.txt', transform=transform)
-    # cnn3d = CNN3D()
-    # # print(dataset[0]['images'].shape)
-    # print(cnn3d(dataset[0]['images'].unsqueeze(0)))
-    crnn = CRNN()
-    print(crnn(dataset[0]['images'].unsqueeze(0)))
+    dataset = CSL_Isolated(data_path="/home/aistudio/data/data20273/CSL_Isolated_125000",
+        label_path='/home/aistudio/data/data20273/CSL_Isolated_125000/dictionary.txt', transform=transform)
+    cnn3d = CNN3D()
+    # print(dataset[0]['images'].shape)
+    print(cnn3d(dataset[0]['images'].unsqueeze(0)))
+    # crnn = CRNN()
+    # print(crnn(dataset[0]['images'].unsqueeze(0)))

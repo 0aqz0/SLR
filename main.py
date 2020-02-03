@@ -10,11 +10,11 @@ from torch.utils.tensorboard import SummaryWriter
 import torchvision.transforms as transforms
 from sklearn.metrics import accuracy_score
 from models import CNN3D, CRNN
-from dataset import CSL_Dataset
+from dataset import CSL_Isolated
 
 # Path setting
-data_path = "/home/haodong/Data/CSL_Dataset/S500_color_video"
-label_path = "/home/haodong/Data/CSL_Dataset/dictionary.txt"
+data_path = "/home/aistudio/data/data20273/CSL_Isolated_125000"
+label_path = "/home/aistudio/data/data20273/CSL_Isolated_125000/dictionary.txt"
 model_path = "."
 log_path = "./log{:_%Y-%m-%d_%H-%M-%S}.txt".format(datetime.now())
 sum_path = "runs/slr{:_%Y-%m-%d_%H-%M-%S}".format(datetime.now())
@@ -47,7 +47,7 @@ if __name__ == '__main__':
     transform = transforms.Compose([transforms.Resize([img_h, img_w]),
                                     transforms.ToTensor(),
                                     transforms.Normalize(mean=[0.5], std=[0.5])])
-    dataset = CSL_Dataset(data_path=data_path, label_path=label_path, frames=img_d, transform=transform)
+    dataset = CSL_Isolated(data_path=data_path, label_path=label_path, frames=img_d, transform=transform)
     trainset, testset = random_split(dataset, [int(0.8*len(dataset)), int(0.2*len(dataset))])
     print("Dataset samples: {}".format(len(dataset)))
     trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
