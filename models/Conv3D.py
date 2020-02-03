@@ -17,7 +17,7 @@ class CNN3D(nn.Module):
 
         # network params
         self.ch1, self.ch2, self.ch3 = 32, 48, 48
-        self.k1, self.k2, self.k3 = (5,7,7), (3,7,7), (3,5,5)
+        self.k1, self.k2, self.k3 = (3,7,7), (3,7,7), (3,5,5)
         self.s1, self.s2, self.s3 = (2,2,2), (2,2,2), (2,2,2)
         self.p1, self.p2, self.p3 = (0,0,0), (0,0,0), (0,0,0)
         self.d1, self.d2, self.d3 = (1,1,1), (1,1,1), (1,1,1)
