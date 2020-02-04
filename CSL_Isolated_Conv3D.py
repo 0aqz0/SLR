@@ -25,8 +25,10 @@ sum_path = "runs/slr_{:%Y-%m-%d_%H-%M-%S}".format(datetime.now())
 logging.basicConfig(level=logging.INFO, format='%(message)s', handlers=[logging.FileHandler(log_path), logging.StreamHandler()])
 logger = logging.getLogger('SLR')
 logger.info('Logging to file...')
-# writer = SummaryWriter(sum_path)
+writer = SummaryWriter(sum_path)
 
+# Use specific gpus
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 # Device setting
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -66,10 +68,10 @@ if __name__ == '__main__':
     logger.info("Training Started".center(60, '#'))
     for epoch in range(epochs):
         # Train the model
-        train(model, criterion, optimizer, trainloader, device, epoch, logger, log_interval)
+        train(model, criterion, optimizer, trainloader, device, epoch, logger, log_interval, writer)
 
         # Test the model
-        test(model, criterion, testloader, device, epoch, logger)
+        test(model, criterion, testloader, device, epoch, logger, writer)
 
         # Save model
         torch.save(model.state_dict(), os.path.join(model_path, "slr_cnn3d_epoch{}.pth".format(epoch+1)))

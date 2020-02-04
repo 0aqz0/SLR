@@ -1,7 +1,7 @@
 import torch
 from sklearn.metrics import accuracy_score
 
-def train(model, criterion, optimizer, trainloader, device, epoch, logger, log_interval):
+def train(model, criterion, optimizer, trainloader, device, epoch, logger, log_interval, writer):
     # Set trainning mode
     model.train()
     losses = []
@@ -39,6 +39,6 @@ def train(model, criterion, optimizer, trainloader, device, epoch, logger, log_i
     all_pred = torch.stack(all_pred, dim=0)
     training_acc = accuracy_score(all_label.squeeze().cpu().data.squeeze().numpy(), all_pred.cpu().data.squeeze().numpy())
     # Log
-    # writer.add_scalar('Loss/train', training_loss, epoch+1)
-    # writer.add_scalar('Accuracy/train', training_acc, epoch+1)
+    writer.add_scalar('Loss/train', training_loss, epoch+1)
+    writer.add_scalar('Accuracy/train', training_acc, epoch+1)
     logger.info("Average Training Loss of Epoch {}: {:.6f} | Acc: {:.2f}%".format(epoch+1, training_loss, training_acc*100))
