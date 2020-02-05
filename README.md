@@ -1,11 +1,36 @@
 # SLR
-Sign Language Recognition Using Pytorch
+sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
 
 ## Models
 
-### C3D
+### CNN+LSTM
 
-![cnn3d_2020-01-16_21-49-36](cnn3d_2020-01-16_21-49-36.png)
+1. **four layers of Conv2d + one layer of LSTM**
 
-> Best Accuracy: 51.4% at epoch 29
+| Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
+| ------------ | ------- | ------- | ------------- | -------------- |
+| CSL_Isolated | 100     | 25,000  | 94.88%        | 0.215799       |
+| CSL_Isolated | 500     | 125,000 |               |                |
 
+
+
+### 3D CNN
+
+1. **three layers of Conv3d**
+
+| Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
+| ------------ | ------- | ------- | ------------- | -------------- |
+| CSL_Isolated | 100     | 25,000  | 97.64%        | 0.094761       |
+| CSL_Isolated | 500     | 125,000 |               |                |
+
+
+
+### GCN
+
+
+
+## Todos
+
+- 3D Resnet
+
+- 2D Resnet + LSTM
