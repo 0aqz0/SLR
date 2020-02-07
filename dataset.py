@@ -41,7 +41,7 @@ class CSL_Isolated(Dataset):
         start = 1
         step = int(len(os.listdir(folder_path))/self.frames)
         for i in range(self.frames):
-            image = Image.open(os.path.join(folder_path, '{:06d}.jpg').format(start+i*step)).convert('L')
+            image = Image.open(os.path.join(folder_path, '{:06d}.jpg').format(start+i*step))  #.convert('L')
             if self.transform is not None:
                 image = self.transform(image)
             images.append(image)
