@@ -28,16 +28,16 @@ logger.info('Logging to file...')
 writer = SummaryWriter(sum_path)
 
 # Use specific gpus
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+# os.environ["CUDA_VISIBLE_DEVICES"]="1"
 # Device setting
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyperparams
-num_classes = 100
-epochs = 30
-batch_size = 32
+num_classes = 500
+epochs = 50
+batch_size = 16
 learning_rate = 1e-4
-log_interval = 20
+log_interval = 100
 img_d, img_h, img_w = 16, 128, 128
 drop_p = 0.0
 hidden1, hidden2 = 512, 256
@@ -74,7 +74,7 @@ if __name__ == '__main__':
         test(model, criterion, testloader, device, epoch, logger, writer)
 
         # Save model
-        torch.save(model.state_dict(), os.path.join(model_path, "slr_cnn3d_epoch{}.pth".format(epoch+1)))
+        torch.save(model.state_dict(), os.path.join(model_path, "slr_cnn3d_epoch{:03d}.pth".format(epoch+1)))
         logger.info("Epoch {} Model Saved".format(epoch+1).center(60, '#'))
 
     logger.info("Training Finished".center(60, '#'))
