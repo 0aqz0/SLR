@@ -95,13 +95,245 @@ class CNN3D(nn.Module):
         return D_out, H_out, W_out
 
 
+"""
+Implementation of 3D Resnet
+Reference: Can Spatiotemporal 3D CNNs Retrace the History of 2D CNNs and ImageNet?
+"""
+class BasicBlock(nn.Module):
+    expansion = 1
+    # planes refer to the number of feature maps
+    def __init__(self, inplanes, planes, stride=1, downsample=None):
+        super(BasicBlock, self).__init__()
+        self.stride = stride
+        self.downsample = downsample
+        self.conv1 = nn.Conv3d(
+            inplanes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm3d(planes)
+        self.relu = nn.ReLU(inplace=True)
+        self.conv2 = nn.Conv3d(
+            planes, planes, kernel_size=3, padding=1, bias=False)
+        self.bn2 = nn.BatchNorm3d(planes)
+
+    def forward(self, x):
+        residual = x
+        # conv1
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.relu(out)
+        # conv2
+        out = self.conv2(out)
+        out = self.bn2(out)
+        # downsample
+        if self.downsample is not None:
+            residual = self.downsample(x)
+
+        # print(out.shape, residual.shape)
+        out += residual
+        out = self.relu(out)
+
+        return out
+
+
+class Bottleneck(nn.Module):
+    expansion = 4
+    # planes refer to the number of feature maps
+    def __init__(self, inplanes, planes, stride=1, downsample=None):
+        super(Bottleneck, self).__init__()
+        self.stride = stride
+        self.downsample = downsample
+        self.conv1 = nn.Conv3d(
+            inplanes, planes, kernel_size=1, bias=False) # kernal_size=1 don't need padding
+        self.bn1 = nn.BatchNorm3d(planes)
+        self.conv2 = nn.Conv3d(
+            planes, planes, kernel_size=3, stride=stride, padding=1, bias=False)
+        self.bn2 = nn.BatchNorm3d(planes)
+        self.conv3 = nn.Conv3d(planes, planes * 4, kernel_size=1, bias=False)
+        self.bn3 = nn.BatchNorm3d(planes * 4)
+        self.relu = nn.ReLU(inplace=True)
+
+    def forward(self, x):
+        residual = x
+        # conv1
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = self.relu(out)
+        # conv2
+        out = self.conv2(out)
+        out = self.bn2(out)
+        out = self.relu(out)
+        # conv3
+        out = self.conv3(out)
+        out = self.bn3(out)
+        # downsample
+        if self.downsample is not None:
+            residual = self.downsample(x)
+
+        # print(out.shape, residual.shape)
+        out += residual
+        out = self.relu(out)
+
+        return out
+
+
+def downsample_basic_block(x, planes, stride):
+    # decrease data resolution if stride not equals to 1
+    out = F.avg_pool3d(x, kernel_size=1, stride=stride)
+    # shape: (batch_size, channel, t, h, w)
+    # try to match the channel size
+    zero_pads = torch.Tensor(
+        out.size(0), planes - out.size(1), out.size(2), out.size(3),
+        out.size(4)).zero_()
+    if isinstance(out.data, torch.cuda.FloatTensor):
+        zero_pads = zero_pads.cuda()
+
+    out = Variable(torch.cat([out.data, zero_pads], dim=1))
+
+    return out
+
+
+class ResNet(nn.Module):
+    def __init__(self, block, layers, sample_size, sample_duration, shortcut_type='B', num_classes=500):
+        super(ResNet, self).__init__()
+        # initialize inplanes to 64, it'll be changed later
+        self.inplanes = 64
+        self.conv1 = nn.Conv3d(
+            3, 64, kernel_size=7, stride=(1, 2, 2), padding=(3, 3, 3), bias=False)
+        self.bn1 = nn.BatchNorm3d(64)
+        self.relu = nn.ReLU(inplace=True)
+        self.maxpool = nn.MaxPool3d(kernel_size=(3, 3, 3), stride=2, padding=1)
+        # layers refers to the number of blocks in each layer
+        self.layer1 = self._make_layer(
+            block, 64, layers[0], shortcut_type, stride=1)
+        self.layer2 = self._make_layer(
+            block, 128, layers[1], shortcut_type, stride=2)
+        self.layer3 = self._make_layer(
+            block, 256, layers[2], shortcut_type, stride=2)
+        self.layer4 = self._make_layer(
+            block, 512, layers[3], shortcut_type, stride=2)
+        # calclatue kernal size for average pooling
+        last_duration = int(math.ceil(sample_duration / 16))
+        last_size = int(math.ceil(sample_size / 32))
+        self.avgpool = nn.AvgPool3d(
+            (last_duration, last_size, last_size), stride=1)
+        self.fc = nn.Linear(512 * block.expansion, num_classes)
+        # init the weights
+        for m in self.modules():
+            if isinstance(m, nn.Conv3d):
+                m.weight = nn.init.kaiming_normal_(m.weight, mode='fan_out')
+            elif isinstance(m, nn.BatchNorm3d):
+                m.weight.data.fill_(1)
+                m.bias.data.zero_()
+
+    def _make_layer(self, block, planes, blocks, shortcut_type, stride):
+        downsample = None
+        # when the in-channel and the out-channel dismatch, downsample!!!
+        if stride != 1 or self.inplanes != planes * block.expansion:
+            # stride once for downsample and block.
+            if shortcut_type == 'A':
+                downsample = partial(
+                    downsample_basic_block,
+                    planes=planes * block.expansion,
+                    stride=stride)
+            else:
+                downsample = nn.Sequential(
+                    nn.Conv3d(
+                        self.inplanes,
+                        planes * block.expansion,
+                        kernel_size=1,
+                        stride=stride,
+                        bias=False), nn.BatchNorm3d(planes * block.expansion))
+
+        layers = []
+        # only the first block needs downsample.
+        layers.append(block(self.inplanes, planes, stride, downsample))
+        # change inplanes for the next layer
+        self.inplanes = planes * block.expansion
+        for i in range(1, blocks):
+            layers.append(block(self.inplanes, planes))
+
+        return nn.Sequential(*layers)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        x = self.layer4(x)
+
+        x = self.avgpool(x)
+        # x.size(0) ------ batch_size
+        x = x.view(x.size(0), -1)
+        x = self.fc(x)
+
+        return x
+
+
+def resnet10(**kwargs):
+    """Constructs a ResNet-10 model.
+    """
+    model = ResNet(BasicBlock, [1, 1, 1, 1], **kwargs)
+    return model
+
+
+def resnet18(**kwargs):
+    """Constructs a ResNet-18 model.
+    """
+    model = ResNet(BasicBlock, [2, 2, 2, 2], **kwargs)
+    return model
+
+
+def resnet34(**kwargs):
+    """Constructs a ResNet-34 model.
+    """
+    model = ResNet(BasicBlock, [3, 4, 6, 3], **kwargs)
+    return model
+
+
+def resnet50(**kwargs):
+    """Constructs a ResNet-50 model.
+    """
+    model = ResNet(Bottleneck, [3, 4, 6, 3], **kwargs)
+    return model
+
+
+def resnet101(**kwargs):
+    """Constructs a ResNet-101 model.
+    """
+    model = ResNet(Bottleneck, [3, 4, 23, 3], **kwargs)
+    return model
+
+
+def resnet152(**kwargs):
+    """Constructs a ResNet-101 model.
+    """
+    model = ResNet(Bottleneck, [3, 8, 36, 3], **kwargs)
+    return model
+
+
+def resnet200(**kwargs):
+    """Constructs a ResNet-101 model.
+    """
+    model = ResNet(Bottleneck, [3, 24, 36, 3], **kwargs)
+    return model
+
+
 # Test
 if __name__ == '__main__':
+    import sys
+    sys.path.append("..")
     import torchvision.transforms as transforms
     from dataset import CSL_Isolated
-    transform = transforms.Compose([transforms.Resize([128, 96]), transforms.ToTensor()])
-    dataset = CSL_Isolated(data_path="/home/aistudio/data/data20273/CSL_Isolated_125000",
-        label_path='/home/aistudio/data/data20273/CSL_Isolated_125000/dictionary.txt', transform=transform)
-    cnn3d = CNN3D()
+    transform = transforms.Compose([transforms.Resize([128, 128]), transforms.ToTensor()])
+    dataset = CSL_Isolated(data_path="/home/haodong/Data/CSL_Isolated_1/color_video_125000",
+        label_path="/home/haodong/Data/CSL_Isolated_1/dictionary.txt", transform=transform)
+    # cnn3d = CNN3D()
+    sample_size = 128
+    sample_duration = 16
+    num_classes = 500
+    cnn3d = resnet200(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes)
     # print(dataset[0]['images'].shape)
     print(cnn3d(dataset[0]['images'].unsqueeze(0)))
