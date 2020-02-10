@@ -146,12 +146,19 @@ class CSL_Isolated_25000(Dataset):
 Implementation of CSL Skeleton Dataset
 """
 class CSL_Skeleton(Dataset):
-    def __init__(self, data_path, label_path, frames=16, num_classes=500, transform=None):
+    joints_index = {'SPINEBASE': 0, 'SPINEMID': 1, 'NECK': 2, 'HEAD': 3, 'SHOULDERLEFT':4,
+                    'ELBOWLEFT': 5, 'WRISTLEFT': 6, 'HANDLEFT': 7, 'SHOULDERRIGHT': 8,
+                    'ELBOWRIGHT': 9, 'WRISTRIGHT': 10, 'HANDRIGHT': 11, 'HIPLEFT': 12,
+                    'KNEELEFT': 13, 'ANKLELEFT': 14, 'FOOTLEFT': 15, 'HIPRIGHT': 16,
+                    'KNEERIGHT': 17, 'ANKLERIGHT': 18, 'FOOTRIGHT': 19, 'SPINESHOULDER': 20,
+                    'HANDTIPLEFT': 21, 'THUMBLEFT': 22, 'HANDTIPRIGHT': 23, 'THUMBRIGHT': 24}
+    def __init__(self, data_path, label_path, frames=16, num_classes=500, selected_joints=None, transform=None):
         super(CSL_Skeleton, self).__init__()
         self.data_path = data_path
         self.label_path = label_path
         self.frames = frames
         self.num_classes = num_classes
+        self.selected_joints = selected_joints
         self.transform = transform
         self.signers = 50
         self.repetition = 5
@@ -178,10 +185,21 @@ class CSL_Skeleton(Dataset):
         all_skeletons = []
         for line in txt_file.readlines():
             line = line.split(' ')
-            skeleton = torch.LongTensor([int(item) for item in line if item is not '\n'])
+            skeleton = [int(item) for item in line if item is not '\n']
+            # select specific joints
+            if self.selected_joints is not None:
+                selected_skeleton = []
+                for joint in self.selected_joints:
+                    assert joint in self.joints_index, 'JOINT ' + joint + ' DONT EXIST!!!'
+                    selected_skeleton.append(skeleton[2*self.joints_index[joint]])
+                    selected_skeleton.append(skeleton[2*self.joints_index[joint]+1])
+            else:
+                selected_skeleton = skeleton
+            # print(selected_skeleton)
+            selected_skeleton = torch.LongTensor(selected_skeleton)
             if self.transform is not None:
-                skeleton = self.transform(skeleton)
-            all_skeletons.append(skeleton)
+                selected_skeleton = self.transform(selected_skeleton)
+            all_skeletons.append(selected_skeleton)
         # print(all_skeletons)
         skeletons = []
         start = 0
@@ -218,7 +236,7 @@ if __name__ == '__main__':
     #     label_path='/home/aistudio/data/data20273/CSL_Isolated_125000/dictionary.txt', transform=transform)    # print(len(dataset))
     # # print(dataset[1000]['images'].shape)
     dataset = CSL_Skeleton(data_path="/home/haodong/Data/CSL_Isolated_1/xf500_body_depth_txt",
-        label_path="/home/haodong/Data/CSL_Isolated_1/dictionary.txt")
+        label_path="/home/haodong/Data/CSL_Isolated_1/dictionary.txt", selected_joints=['SPINEBASE', 'SPINEMID', 'HANDTIPRIGHT'])
     print(dataset[1000])
     label = dataset[1000]['label']
     print(dataset.label_to_word(label))
