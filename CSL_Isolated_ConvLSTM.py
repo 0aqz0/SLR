@@ -9,7 +9,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 from torch.utils.tensorboard import SummaryWriter
 import torchvision.transforms as transforms
-from models.ConvLSTM import CRNN
+from models.ConvLSTM import CRNN, ResCRNN
 from dataset import CSL_Isolated
 from train import train
 from test import test
@@ -33,11 +33,11 @@ os.environ["CUDA_VISIBLE_DEVICES"]="1,3"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyperparams
-num_classes = 500
-epochs = 100
+num_classes = 100
+epochs = 300
 batch_size = 32
 learning_rate = 1e-4
-log_interval = 100
+log_interval = 20
 img_d, img_h, img_w = 16, 128, 128
 
 # Train with Conv+LSTM
@@ -52,7 +52,8 @@ if __name__ == '__main__':
     trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     testloader = DataLoader(testset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     # Create model
-    model = CRNN(img_depth=img_d, img_height=img_h, img_width=img_w, num_classes=num_classes).to(device)
+    # model = CRNN(img_depth=img_d, img_height=img_h, img_width=img_w, num_classes=num_classes).to(device)
+    model = ResCRNN(img_depth=img_d, img_height=img_h, img_width=img_w, num_classes=num_classes).to(device)
     # Run the model parallelly
     if torch.cuda.device_count() > 1:
         logger.info("Using {} GPUs".format(torch.cuda.device_count()))
