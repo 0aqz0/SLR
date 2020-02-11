@@ -14,14 +14,14 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
    | CSL_Isolated | 100     | 25,000  | 94.88%        | 0.215799       |
    | CSL_Isolated | 500     | 125,000 | 91.09%        | 0.412514       |
 
-2. **resnet152 + one layer of LSTM**
+2. **ResNet + one layer of LSTM**
 
    three channels(rgb):
 
-   | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
-   | ------------ | ------- | ------- | ------------- | -------------- |
-   | CSL_Isolated | 100     | 25,000  |               |                |
-   | CSL_Isolated | 500     | 125,000 |               |                |
+   | Model     | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
+   | --------- | ------------ | ------- | ------- | ------------- | -------------- |
+   | ResNet152 | CSL_Isolated | 100     | 25,000  | 93.80%        | 0.209352       |
+   | ResNet152 | CSL_Isolated | 500     | 125,000 |               |                |
 
 ### 3D CNN
 
@@ -38,10 +38,10 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
 
    three channels(rgb):
 
-   | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
-   | ------------ | ------- | ------- | ------------- | -------------- |
-   | CSL_Isolated | 100     | 25,000  |               |                |
-   | CSL_Isolated | 500     | 125,000 |               |                |
+   | Model    | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
+   | -------- | ------------ | ------- | ------- | ------------- | -------------- |
+   | Resnet18 | CSL_Isolated | 100     | 25,000  | 98.72%        | 0.051288       |
+   | ResNet18 | CSL_Isolated | 500     | 125,000 |               |                |
 
 ### GCN
 
@@ -50,8 +50,8 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
 ## Todos
 
 - GCN
-- I3D
 - 3D Resnet from torchvision
+- I3D
 - seq-to-seq learning
 - attension machanism
 - CTC loss
