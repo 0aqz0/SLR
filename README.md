@@ -50,6 +50,7 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
 ## Todos
 
 - GCN
+- visualize results
 - 3D Resnet from torchvision
 - I3D
 - seq-to-seq learning
