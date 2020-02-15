@@ -196,7 +196,7 @@ class CSL_Skeleton(Dataset):
             else:
                 selected_skeleton = skeleton
             # print(selected_skeleton)
-            selected_skeleton = torch.LongTensor(selected_skeleton)
+            selected_skeleton = torch.FloatTensor(selected_skeleton)
             if self.transform is not None:
                 selected_skeleton = self.transform(selected_skeleton)
             all_skeletons.append(selected_skeleton)
@@ -223,7 +223,7 @@ class CSL_Skeleton(Dataset):
         data = self.read_file(selected_txt)
         label = torch.LongTensor([int(idx/self.txt_per_folder)])
 
-        return {'data': data, 'label': label}
+        return {'images': data, 'label': label}
 
     def label_to_word(self, label):
         return self.labels['{:06d}'.format(label.item())]
