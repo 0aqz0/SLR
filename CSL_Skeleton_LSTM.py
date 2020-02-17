@@ -16,7 +16,7 @@ from test import test
 # Path setting
 data_path = "/home/haodong/Data/CSL_Isolated_1/xf500_body_depth_txt"
 label_path = "/home/haodong/Data/CSL_Isolated_1/dictionary.txt"
-model_path = "/home/haodong/Data/skeleton_models_1"
+model_path = "/home/haodong/Data/skeleton_models"
 log_path = "log/skeleton_{:%Y-%m-%d_%H-%M-%S}.log".format(datetime.now())
 sum_path = "runs/slr_skeleton_{:%Y-%m-%d_%H-%M-%S}".format(datetime.now())
 
@@ -32,11 +32,11 @@ os.environ["CUDA_VISIBLE_DEVICES"]="2"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyperparams
-epochs = 500
+epochs = 1000
 batch_size = 32
 learning_rate = 1e-5
-log_interval = 20
-num_classes = 100
+log_interval = 100
+num_classes = 500
 sample_duration = 16
 selected_joints = ['HANDLEFT', 'HANDRIGHT', 'ELBOWLEFT', 'ELBOWRIGHT']
 lstm_input_size = len(selected_joints)*2
