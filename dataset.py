@@ -8,16 +8,20 @@ import torchvision.transforms as transforms
 Implementation of Chinese Sign Language Dataset(50 signers with 5 times)
 """
 class CSL_Isolated(Dataset):
-    def __init__(self, data_path, label_path, frames=16, num_classes=500, transform=None):
+    def __init__(self, data_path, label_path, frames=16, num_classes=500, train=True, transform=None):
         super(CSL_Isolated, self).__init__()
         self.data_path = data_path
         self.label_path = label_path
+        self.train = train
         self.transform = transform
         self.frames = frames
         self.num_classes = num_classes
         self.signers = 50
         self.repetition = 5
-        self.videos_per_folder = self.signers * self.repetition
+        if self.train:
+            self.videos_per_folder = int(0.8 * self.signers * self.repetition)
+        else:
+            self.videos_per_folder = int(0.2 * self.signers * self.repetition)
         self.data_folder = []
         try:
             obs_path = [os.path.join(self.data_path, item) for item in os.listdir(self.data_path)]
@@ -59,7 +63,10 @@ class CSL_Isolated(Dataset):
         top_folder = self.data_folder[int(idx/self.videos_per_folder)]
         selected_folders = [os.path.join(top_folder, item) for item in os.listdir(top_folder)]
         selected_folders = sorted([item for item in selected_folders if os.path.isdir(item)])
-        selected_folder = selected_folders[idx%self.videos_per_folder]
+        if self.train:
+            selected_folder = selected_folders[idx%self.videos_per_folder]
+        else:
+            selected_folder = selected_folders[idx%self.videos_per_folder + int(0.8*self.signers*self.repetition)]
         images = self.read_images(selected_folder)
         # print(selected_folder, int(idx/self.videos_per_folder))
         # print(self.labels['{:06d}'.format(int(idx/self.videos_per_folder))])
@@ -152,7 +159,7 @@ class CSL_Skeleton(Dataset):
                     'KNEELEFT': 13, 'ANKLELEFT': 14, 'FOOTLEFT': 15, 'HIPRIGHT': 16,
                     'KNEERIGHT': 17, 'ANKLERIGHT': 18, 'FOOTRIGHT': 19, 'SPINESHOULDER': 20,
                     'HANDTIPLEFT': 21, 'THUMBLEFT': 22, 'HANDTIPRIGHT': 23, 'THUMBRIGHT': 24}
-    def __init__(self, data_path, label_path, frames=16, num_classes=500, selected_joints=None, split_to_channels=False, transform=None):
+    def __init__(self, data_path, label_path, frames=16, num_classes=500, selected_joints=None, split_to_channels=False, train=True, transform=None):
         super(CSL_Skeleton, self).__init__()
         self.data_path = data_path
         self.label_path = label_path
@@ -160,10 +167,14 @@ class CSL_Skeleton(Dataset):
         self.num_classes = num_classes
         self.selected_joints = selected_joints
         self.split_to_channels = split_to_channels
+        self.train = train
         self.transform = transform
         self.signers = 50
         self.repetition = 5
-        self.txt_per_folder = self.signers * self.repetition
+        if self.train:
+            self.txt_per_folder = int(0.8 * self.signers * self.repetition)
+        else:
+            self.txt_per_folder = int(0.2 * self.signers * self.repetition)
         self.data_folder = []
         try:
             obs_path = [os.path.join(self.data_path, item) for item in os.listdir(self.data_path)]
@@ -228,7 +239,10 @@ class CSL_Skeleton(Dataset):
         top_folder = self.data_folder[int(idx/self.txt_per_folder)]
         selected_txts = [os.path.join(top_folder, item) for item in os.listdir(top_folder)]
         selected_txts = sorted([item for item in selected_txts if item.endswith('.txt')])
-        selected_txt = selected_txts[idx%self.txt_per_folder]
+        if self.train:
+            selected_txt = selected_txts[idx%self.txt_per_folder]
+        else:
+            selected_txt = selected_txts[idx%self.txt_per_folder + int(0.8*self.signers*self.repetition)]
         # print(selected_txt)
         data = self.read_file(selected_txt)
         label = torch.LongTensor([int(idx/self.txt_per_folder)])
