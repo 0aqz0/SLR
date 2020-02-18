@@ -32,7 +32,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]="1"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyperparams
-epochs = 100
+epochs = 60
 batch_size = 32
 learning_rate = 1e-5
 log_interval = 20
@@ -46,10 +46,11 @@ split_to_channels = True
 if __name__ == '__main__':
     # Load data
     transform = None # TODO
-    dataset = CSL_Skeleton(data_path=data_path, label_path=label_path, frames=sample_duration,
-        num_classes=num_classes, selected_joints=selected_joints, split_to_channels=split_to_channels, transform=transform)
-    trainset, testset = random_split(dataset, [int(0.8*len(dataset)), int(0.2*len(dataset))])
-    logger.info("Dataset samples: {}".format(len(dataset)))
+    trainset = CSL_Skeleton(data_path=data_path, label_path=label_path, frames=sample_duration, num_classes=num_classes,
+        selected_joints=selected_joints, split_to_channels=split_to_channels, train=True, transform=transform)
+    testset = CSL_Skeleton(data_path=data_path, label_path=label_path, frames=sample_duration, num_classes=num_classes,
+        selected_joints=selected_joints, split_to_channels=split_to_channels, train=False, transform=transform)
+    logger.info("Dataset samples: {}".format(len(trainset)+len(testset)))
     trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     testloader = DataLoader(testset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     # Create model
