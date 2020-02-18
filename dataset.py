@@ -152,13 +152,14 @@ class CSL_Skeleton(Dataset):
                     'KNEELEFT': 13, 'ANKLELEFT': 14, 'FOOTLEFT': 15, 'HIPRIGHT': 16,
                     'KNEERIGHT': 17, 'ANKLERIGHT': 18, 'FOOTRIGHT': 19, 'SPINESHOULDER': 20,
                     'HANDTIPLEFT': 21, 'THUMBLEFT': 22, 'HANDTIPRIGHT': 23, 'THUMBRIGHT': 24}
-    def __init__(self, data_path, label_path, frames=16, num_classes=500, selected_joints=None, transform=None):
+    def __init__(self, data_path, label_path, frames=16, num_classes=500, selected_joints=None, split_to_channels=False, transform=None):
         super(CSL_Skeleton, self).__init__()
         self.data_path = data_path
         self.label_path = label_path
         self.frames = frames
         self.num_classes = num_classes
         self.selected_joints = selected_joints
+        self.split_to_channels = split_to_channels
         self.transform = transform
         self.signers = 50
         self.repetition = 5
@@ -186,17 +187,26 @@ class CSL_Skeleton(Dataset):
         for line in txt_file.readlines():
             line = line.split(' ')
             skeleton = [int(item) for item in line if item is not '\n']
+            selected_x = []
+            selected_y = []
             # select specific joints
             if self.selected_joints is not None:
-                selected_skeleton = []
                 for joint in self.selected_joints:
                     assert joint in self.joints_index, 'JOINT ' + joint + ' DONT EXIST!!!'
-                    selected_skeleton.append(skeleton[2*self.joints_index[joint]])
-                    selected_skeleton.append(skeleton[2*self.joints_index[joint]+1])
+                    selected_x.append(skeleton[2*self.joints_index[joint]])
+                    selected_y.append(skeleton[2*self.joints_index[joint]+1])
             else:
-                selected_skeleton = skeleton
-            # print(selected_skeleton)
-            selected_skeleton = torch.FloatTensor(selected_skeleton)
+                for i in range(len(skeleton)):
+                    if i % 2 == 0:
+                        selected_x.append(skeleton[i])
+                    else:
+                        selected_y.append(skeleton[i])
+            # print(selected_x, selected_y)
+            if self.split_to_channels:
+                selected_skeleton = torch.FloatTensor([selected_x, selected_y])
+            else:
+                selected_skeleton = torch.FloatTensor(selected_x + selected_y)
+            # print(selected_skeleton.shape)
             if self.transform is not None:
                 selected_skeleton = self.transform(selected_skeleton)
             all_skeletons.append(selected_skeleton)
@@ -236,7 +246,8 @@ if __name__ == '__main__':
     #     label_path='/home/aistudio/data/data20273/CSL_Isolated_125000/dictionary.txt', transform=transform)    # print(len(dataset))
     # # print(dataset[1000]['images'].shape)
     dataset = CSL_Skeleton(data_path="/home/haodong/Data/CSL_Isolated_1/xf500_body_depth_txt",
-        label_path="/home/haodong/Data/CSL_Isolated_1/dictionary.txt", selected_joints=['SPINEBASE', 'SPINEMID', 'HANDTIPRIGHT'])
-    print(dataset[1000])
-    label = dataset[1000]['label']
-    print(dataset.label_to_word(label))
+        label_path="/home/haodong/Data/CSL_Isolated_1/dictionary.txt", selected_joints=['SPINEBASE', 'SPINEMID', 'HANDTIPRIGHT'], split_to_channels=True)
+    # print(dataset[1000])
+    # label = dataset[1000]['label']
+    # print(dataset.label_to_word(label))
+    dataset[1000]
