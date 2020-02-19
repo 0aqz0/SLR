@@ -28,16 +28,16 @@ logger.info('Logging to file...')
 writer = SummaryWriter(sum_path)
 
 # Use specific gpus
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+os.environ["CUDA_VISIBLE_DEVICES"]="0, 2"
 # Device setting
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyperparams
-num_classes = 500
-epochs = 50
+num_classes = 100
+epochs = 100
 batch_size = 32
 learning_rate = 1e-5
-log_interval = 100
+log_interval = 20
 sample_size = 128
 sample_duration = 16
 drop_p = 0.0
@@ -49,9 +49,11 @@ if __name__ == '__main__':
     transform = transforms.Compose([transforms.Resize([sample_size, sample_size]),
                                     transforms.ToTensor(),
                                     transforms.Normalize(mean=[0.5], std=[0.5])])
-    dataset = CSL_Isolated(data_path=data_path, label_path=label_path, frames=sample_duration, num_classes=num_classes, transform=transform)
-    trainset, testset = random_split(dataset, [int(0.8*len(dataset)), int(0.2*len(dataset))])
-    logger.info("Dataset samples: {}".format(len(dataset)))
+    trainset = CSL_Isolated(data_path=data_path, label_path=label_path, frames=sample_duration,
+        num_classes=num_classes, train=True, transform=transform)
+    testset = CSL_Isolated(data_path=data_path, label_path=label_path, frames=sample_duration,
+        num_classes=num_classes, train=False, transform=transform)
+    logger.info("Dataset samples: {}".format(len(trainset)+len(testset)))
     trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
     testloader = DataLoader(testset, batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
     # Create model
