@@ -27,7 +27,7 @@ logger.info('Logging to file...')
 writer = SummaryWriter(sum_path)
 
 # Use specific gpus
-os.environ["CUDA_VISIBLE_DEVICES"]="2"
+os.environ["CUDA_VISIBLE_DEVICES"]="1"
 # Device setting
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -35,8 +35,8 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 epochs = 500
 batch_size = 32
 learning_rate = 1e-5
-log_interval = 20
-num_classes = 100
+log_interval = 100
+num_classes = 500
 sample_duration = 16
 selected_joints = ['HANDLEFT', 'HANDRIGHT', 'ELBOWLEFT', 'ELBOWRIGHT']
 lstm_input_size = len(selected_joints)*2
