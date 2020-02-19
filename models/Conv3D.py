@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision
 import math
 
 """
@@ -321,6 +322,76 @@ def resnet200(**kwargs):
     return model
 
 
+"""
+3D CNN Models from torchvision.models
+Reference: https://pytorch.org/docs/stable/torchvision/models.html#video-classification
+"""
+class r3d_18(nn.Module):
+    def __init__(self, pretrained=True, num_classes=500):
+        super(r3d_18, self).__init__()
+        self.pretrained = pretrained
+        self.num_classes = num_classes
+        model = torchvision.models.video.r3d_18(pretrained=self.pretrained)
+        # delete the last fc layer
+        modules = list(model.children())[:-1]
+        # print(modules)
+        self.r3d_18 = nn.Sequential(*modules)
+        self.fc1 = nn.Linear(model.fc.in_features, self.num_classes)
+
+    def forward(self, x):
+        out = self.r3d_18(x)
+        # print(out.shape)
+        # Flatten the layer to fc
+        out = out.flatten(1)
+        out = F.relu(self.fc1(out))
+
+        return out
+
+
+class mc3_18(nn.Module):
+    def __init__(self, pretrained=True, num_classes=500):
+        super(mc3_18, self).__init__()
+        self.pretrained = pretrained
+        self.num_classes = num_classes
+        model = torchvision.models.video.mc3_18(pretrained=self.pretrained)
+        # delete the last fc layer
+        modules = list(model.children())[:-1]
+        # print(modules)
+        self.mc3_18 = nn.Sequential(*modules)
+        self.fc1 = nn.Linear(model.fc.in_features, self.num_classes)
+
+    def forward(self, x):
+        out = self.mc3_18(x)
+        # print(out.shape)
+        # Flatten the layer to fc
+        out = out.flatten(1)
+        out = F.relu(self.fc1(out))
+
+        return out
+
+
+class r2plus1d_18(nn.Module):
+    def __init__(self, pretrained=True, num_classes=500):
+        super(r2plus1d_18, self).__init__()
+        self.pretrained = pretrained
+        self.num_classes = num_classes
+        model = torchvision.models.video.r2plus1d_18(pretrained=self.pretrained)
+        # delete the last fc layer
+        modules = list(model.children())[:-1]
+        # print(modules)
+        self.r2plus1d_18 = nn.Sequential(*modules)
+        self.fc1 = nn.Linear(model.fc.in_features, self.num_classes)
+
+    def forward(self, x):
+        out = self.r2plus1d_18(x)
+        # print(out.shape)
+        # Flatten the layer to fc
+        out = out.flatten(1)
+        out = F.relu(self.fc1(out))
+
+        return out
+
+
 # Test
 if __name__ == '__main__':
     import sys
@@ -334,6 +405,9 @@ if __name__ == '__main__':
     sample_size = 128
     sample_duration = 16
     num_classes = 500
-    cnn3d = resnet200(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes)
+    # cnn3d = resnet200(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes)
+    # cnn3d = r3d_18(pretrained=True, num_classes=num_classes)
+    # cnn3d = mc3_18(pretrained=True, num_classes=num_classes)
+    cnn3d = r2plus1d_18(pretrained=True, num_classes=num_classes)
     # print(dataset[0]['images'].shape)
     print(cnn3d(dataset[0]['images'].unsqueeze(0)))
