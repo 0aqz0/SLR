@@ -14,8 +14,8 @@ from train import train
 from test import test
 
 # Path setting
-data_path = "/home/haodong/Data/CSL_Isolated_1/xf500_body_depth_txt"
-label_path = "/home/haodong/Data/CSL_Isolated_1/dictionary.txt"
+data_path = "/home/haodong/Data/CSL_Isolated/xf500_body_depth_txt"
+label_path = "/home/haodong/Data/CSL_Isolated/dictionary.txt"
 model_path = "/home/haodong/Data/skeleton_models"
 log_path = "log/skeleton_{:%Y-%m-%d_%H-%M-%S}.log".format(datetime.now())
 sum_path = "runs/slr_skeleton_{:%Y-%m-%d_%H-%M-%S}".format(datetime.now())
@@ -32,11 +32,11 @@ os.environ["CUDA_VISIBLE_DEVICES"]="2"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyperparams
-epochs = 1000
+epochs = 500
 batch_size = 32
 learning_rate = 1e-5
-log_interval = 100
-num_classes = 500
+log_interval = 20
+num_classes = 100
 sample_duration = 16
 selected_joints = ['HANDLEFT', 'HANDRIGHT', 'ELBOWLEFT', 'ELBOWRIGHT']
 lstm_input_size = len(selected_joints)*2
@@ -49,10 +49,11 @@ drop_p = 0.0
 if __name__ == '__main__':
     # Load data
     transform = None # TODO
-    dataset = CSL_Skeleton(data_path=data_path, label_path=label_path, frames=sample_duration,
-        num_classes=num_classes, selected_joints=selected_joints, transform=transform)
-    trainset, testset = random_split(dataset, [int(0.8*len(dataset)), int(0.2*len(dataset))])
-    logger.info("Dataset samples: {}".format(len(dataset)))
+    trainset = CSL_Skeleton(data_path=data_path, label_path=label_path, frames=sample_duration,
+        num_classes=num_classes, selected_joints=selected_joints, train=True, transform=transform)
+    testset = CSL_Skeleton(data_path=data_path, label_path=label_path, frames=sample_duration,
+        num_classes=num_classes, selected_joints=selected_joints, train=False, transform=transform)
+    logger.info("Dataset samples: {}".format(len(trainset)+len(testset)))
     trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     testloader = DataLoader(testset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     # Create model

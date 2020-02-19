@@ -32,11 +32,11 @@ os.environ["CUDA_VISIBLE_DEVICES"]="1"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyperparams
-epochs = 60
+epochs = 200
 batch_size = 32
 learning_rate = 1e-5
-log_interval = 20
-num_classes = 100
+log_interval = 100
+num_classes = 500
 in_channels = 2
 sample_duration = 16
 selected_joints = None
