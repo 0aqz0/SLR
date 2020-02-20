@@ -9,11 +9,10 @@ import math
 Implementation of 3D CNN.
 """
 class CNN3D(nn.Module):
-    def __init__(self, img_depth=25, img_height=128, img_width=96, drop_p=0.0, hidden1=512, hidden2=256, num_classes=100):
+    def __init__(self, sample_size=128, sample_duration=16, drop_p=0.0, hidden1=512, hidden2=256, num_classes=100):
         super(CNN3D, self).__init__()
-        self.img_depth = img_depth
-        self.img_height = img_height
-        self.img_width = img_width
+        self.sample_size = sample_size
+        self.sample_duration = sample_duration
         self.num_classes = num_classes
 
         # network params
@@ -26,8 +25,8 @@ class CNN3D(nn.Module):
         self.drop_p = drop_p
         self.pool_k, self.pool_s, self.pool_p, self.pool_d = (1,2,2), (1,2,2), (0,0,0), (1,1,1)
         # Conv1
-        self.conv1_output_shape = self.compute_output_shape(self.img_depth, self.img_height, 
-            self.img_width, self.k1, self.s1, self.p1, self.d1)
+        self.conv1_output_shape = self.compute_output_shape(self.sample_duration, self.sample_size,
+            self.sample_size, self.k1, self.s1, self.p1, self.d1)
         # self.conv1_output_shape = self.compute_output_shape(self.conv1_output_shape[0], self.conv1_output_shape[1], 
         #     self.conv1_output_shape[2], self.pool_k, self.pool_s, self.pool_p, self.pool_d)
         # Conv2
@@ -41,8 +40,8 @@ class CNN3D(nn.Module):
         # print(self.conv1_output_shape, self.conv2_output_shape, self.conv3_output_shape)
 
         # network architecture
-        # in_channels=1 for grayscale
-        self.conv1 = nn.Conv3d(in_channels=1, out_channels=self.ch1, kernel_size=self.k1,
+        # in_channels=1 for grayscale, 3 for rgb
+        self.conv1 = nn.Conv3d(in_channels=3, out_channels=self.ch1, kernel_size=self.k1,
             stride=self.s1, padding=self.p1, dilation=self.d1)
         self.bn1 = nn.BatchNorm3d(self.ch1)
         self.conv2 = nn.Conv3d(in_channels=self.ch1, out_channels=self.ch2, kernel_size=self.k2,
@@ -64,18 +63,18 @@ class CNN3D(nn.Module):
         x = self.bn1(x)
         x = self.relu(x)
         # x = self.pool(x)
-        x = self.drop(x)
+        # x = self.drop(x)
         # Conv2
         x = self.conv2(x)
         x = self.bn2(x)
         x = self.relu(x)
         # x = self.pool(x)
-        x = self.drop(x)
+        # x = self.drop(x)
         # Conv3
         x = self.conv3(x)
         x = self.bn3(x)
         x = self.relu(x)
-        x = self.drop(x)
+        # x = self.drop(x)
         # MLP
         # print(x.shape)
         # x.size(0) ------ batch_size
@@ -725,17 +724,18 @@ if __name__ == '__main__':
     sys.path.append("..")
     import torchvision.transforms as transforms
     from dataset import CSL_Isolated
-    transform = transforms.Compose([transforms.Resize([256, 256]), transforms.ToTensor()])
-    dataset = CSL_Isolated(data_path="/home/haodong/Data/CSL_Isolated_1/color_video_125000",
-        label_path="/home/haodong/Data/CSL_Isolated_1/dictionary.txt", transform=transform)
-    # cnn3d = CNN3D()
     sample_size = 128
     sample_duration = 16
     num_classes = 500
+    transform = transforms.Compose([transforms.Resize([sample_size, sample_size]), transforms.ToTensor()])
+    dataset = CSL_Isolated(data_path="/home/haodong/Data/CSL_Isolated_1/color_video_125000",
+        label_path="/home/haodong/Data/CSL_Isolated_1/dictionary.txt", frames=sample_duration,
+        num_classes=num_classes, transform=transform)
+    cnn3d = CNN3D(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes)
     # cnn3d = resnet200(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes)
     # cnn3d = r3d_18(pretrained=True, num_classes=num_classes)
     # cnn3d = mc3_18(pretrained=True, num_classes=num_classes)
     # cnn3d = r2plus1d_18(pretrained=True, num_classes=num_classes)
-    cnn3d = InceptionI3d(num_classes=num_classes)
+    # cnn3d = InceptionI3d(num_classes=num_classes)
     # print(dataset[0]['images'].shape)
     print(cnn3d(dataset[0]['images'].unsqueeze(0)))
