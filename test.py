@@ -27,6 +27,6 @@ def test(model, criterion, testloader, device, epoch, logger, writer):
     all_pred = torch.stack(all_pred, dim=0)
     testing_acc = accuracy_score(all_label.squeeze().cpu().data.squeeze().numpy(), all_pred.cpu().data.squeeze().numpy())
     # Log
-    writer.add_scalar('Loss/test', testing_loss, epoch+1)
-    writer.add_scalar('Accuracy/test', testing_acc, epoch+1)
+    writer.add_scalars('Loss', {'test': testing_loss}, epoch+1)
+    writer.add_scalars('Accuracy', {'test': testing_acc}, epoch+1)
     logger.info("Average Testing Loss of Epoch {}: {:.6f} | Acc: {:.2f}%".format(epoch+1, testing_loss, testing_acc*100))
