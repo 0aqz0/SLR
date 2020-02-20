@@ -5,54 +5,37 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
 
 ### CNN+LSTM
 
-1. **four layers of Conv2d + one layer of LSTM**
-
-   one channel(grayscale):
-
-   | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
-   | ------------ | ------- | ------- | ------------- | -------------- |
-   | CSL_Isolated | 100     | 25,000  | 94.88%        | 0.215799       |
-   | CSL_Isolated | 500     | 125,000 | 91.09%        | 0.412514       |
-
-2. **ResNet + one layer of LSTM**
-
-   three channels(rgb):
-
-   | Model     | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
-   | --------- | ------------ | ------- | ------- | ------------- | -------------- |
-   | ResNet152 | CSL_Isolated | 100     | 25,000  | 93.80%        | 0.209352       |
-   | ResNet152 | CSL_Isolated | 500     | 125,000 |               |                |
-
 ### 3D CNN
 
 1. **three layers of Conv3d**
 
-   one channel(grayscale):
-
    | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
-   | ------------ | ------- | ------- | ------------- | -------------- |
-   | CSL_Isolated | 100     | 25,000  | 97.64%        | 0.094761       |
-   | CSL_Isolated | 500     | 125,000 | 92.24%        | 0.295053       |
-
+| ------------ | ------- | ------- | ------------- | -------------- |
+   | CSL_Skeleton | 100     | 25,000  | 58.86%        | 1.560049       |
+   
 2. **3D ResNet**
 
-   three channels(rgb):
-
-   | Model    | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
+   | Method   | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
    | -------- | ------------ | ------- | ------- | ------------- | -------------- |
-   | Resnet18 | CSL_Isolated | 100     | 25,000  | 98.72%        | 0.051288       |
-   | ResNet18 | CSL_Isolated | 500     | 125,000 |               |                |
+   | Resnet18 | CSL_Isolated | 100     | 25,000  | 84.20%        | 0.733129       |
 
 ### GCN
 
+| Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
+| ------------ | ------- | ------- | ------------- | -------------- |
+| CSL_Skeleton | 100     | 25,000  | 79.20%        | 0.737053       |
+| CSL_Skeleton | 500     | 125,000 | 66.64%        | 1.165872       |
 
+### Skeleton+LSTM
+
+| Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
+| ------------ | ------- | ------- | ------------- | -------------- |
+| CSL_Skeleton | 100     | 25,000  | 84.36%        | 0.495949       |
+| CSL_Skeleton | 500     | 125,000 | 70.62%        | 1.078730       |
 
 ## Todos
 
-- GCN
-- visualize results
-- 3D Resnet from torchvision
-- I3D
+- validation
 - seq-to-seq learning
 - attension machanism
 - CTC loss
