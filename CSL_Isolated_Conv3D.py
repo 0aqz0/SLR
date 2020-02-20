@@ -9,7 +9,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 from torch.utils.tensorboard import SummaryWriter
 import torchvision.transforms as transforms
-from models.Conv3D import CNN3D, resnet18, resnet34
+from models.Conv3D import CNN3D, resnet18, resnet34, r3d_18
 from dataset import CSL_Isolated
 from train import train
 from test import test
@@ -59,7 +59,8 @@ if __name__ == '__main__':
     # Create model
     # model = CNN3D(img_depth=sample_duration, img_height=sample_size, img_width=sample_size, drop_p=drop_p,
     #             hidden1=hidden1, hidden2=hidden2, num_classes=num_classes).to(device)
-    model = resnet34(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes).to(device)
+    # model = resnet34(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes).to(device)
+    model = r3d_18(pretrained=True, num_classes=num_classes).to(device)
     # Run the model parallelly
     if torch.cuda.device_count() > 1:
         logger.info("Using {} GPUs".format(torch.cuda.device_count()))
