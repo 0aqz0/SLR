@@ -11,7 +11,7 @@ from torch.utils.tensorboard import SummaryWriter
 from models.GCN import GCN
 from dataset import CSL_Skeleton
 from train import train
-from test import test
+from validation import validation
 
 # Path setting
 data_path = "/home/haodong/Data/CSL_Isolated_1/xf500_body_depth_txt"
@@ -70,8 +70,8 @@ if __name__ == '__main__':
         # Train the model
         train(model, criterion, optimizer, trainloader, device, epoch, logger, log_interval, writer)
 
-        # Test the model
-        test(model, criterion, testloader, device, epoch, logger, writer)
+        # Validate the model
+        validation(model, criterion, testloader, device, epoch, logger, writer)
 
         # Save model
         torch.save(model.state_dict(), os.path.join(model_path, "slr_gcn_epoch{:03d}.pth".format(epoch+1)))

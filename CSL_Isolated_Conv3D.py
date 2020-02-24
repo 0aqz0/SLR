@@ -12,7 +12,7 @@ import torchvision.transforms as transforms
 from models.Conv3D import CNN3D, resnet18, resnet34, r3d_18
 from dataset import CSL_Isolated
 from train import train
-from test import test
+from validation import validation
 
 # Path setting
 data_path = "/home/haodong/Data/CSL_Isolated_1/color_video_125000"
@@ -28,7 +28,7 @@ logger.info('Logging to file...')
 writer = SummaryWriter(sum_path)
 
 # Use specific gpus
-os.environ["CUDA_VISIBLE_DEVICES"]="3"
+os.environ["CUDA_VISIBLE_DEVICES"]="2"
 # Device setting
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -57,10 +57,10 @@ if __name__ == '__main__':
     trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
     testloader = DataLoader(testset, batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
     # Create model
-    model = CNN3D(sample_size=sample_size, sample_duration=sample_duration, drop_p=drop_p,
-                hidden1=hidden1, hidden2=hidden2, num_classes=num_classes).to(device)
+    # model = CNN3D(sample_size=sample_size, sample_duration=sample_duration, drop_p=drop_p,
+    #             hidden1=hidden1, hidden2=hidden2, num_classes=num_classes).to(device)
     # model = resnet34(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes).to(device)
-    # model = r3d_18(pretrained=True, num_classes=num_classes).to(device)
+    model = r3d_18(pretrained=True, num_classes=num_classes).to(device)
     # Run the model parallelly
     if torch.cuda.device_count() > 1:
         logger.info("Using {} GPUs".format(torch.cuda.device_count()))
@@ -75,8 +75,8 @@ if __name__ == '__main__':
         # Train the model
         train(model, criterion, optimizer, trainloader, device, epoch, logger, log_interval, writer)
 
-        # Test the model
-        test(model, criterion, testloader, device, epoch, logger, writer)
+        # Validate the model
+        validation(model, criterion, testloader, device, epoch, logger, writer)
 
         # Save model
         torch.save(model.state_dict(), os.path.join(model_path, "slr_cnn3d_epoch{:03d}.pth".format(epoch+1)))

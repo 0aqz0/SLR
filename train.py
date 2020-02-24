@@ -1,16 +1,15 @@
 import torch
 from sklearn.metrics import accuracy_score
 
-def train(model, criterion, optimizer, trainloader, device, epoch, logger, log_interval, writer):
-    # Set trainning mode
+def train(model, criterion, optimizer, dataloader, device, epoch, logger, log_interval, writer):
     model.train()
     losses = []
     all_label = []
     all_pred = []
 
-    for batch_idx, data in enumerate(trainloader):
+    for batch_idx, data in enumerate(dataloader):
         # get the inputs and labels
-        inputs, labels = data['images'].to(device), data['label'].to(device)
+        inputs, labels = data['data'].to(device), data['label'].to(device)
 
         optimizer.zero_grad()
         # forward
