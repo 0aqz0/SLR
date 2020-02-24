@@ -10,8 +10,8 @@ from torch.utils.data import DataLoader, random_split
 from torch.utils.tensorboard import SummaryWriter
 from models.GCN import GCN
 from dataset import CSL_Skeleton
-from train import train
-from validation import validation
+from train import train_epoch
+from validation import val_epoch
 
 # Path setting
 data_path = "/home/haodong/Data/CSL_Isolated_1/xf500_body_depth_txt"
@@ -46,13 +46,13 @@ split_to_channels = True
 if __name__ == '__main__':
     # Load data
     transform = None # TODO
-    trainset = CSL_Skeleton(data_path=data_path, label_path=label_path, frames=sample_duration, num_classes=num_classes,
+    train_set = CSL_Skeleton(data_path=data_path, label_path=label_path, frames=sample_duration, num_classes=num_classes,
         selected_joints=selected_joints, split_to_channels=split_to_channels, train=True, transform=transform)
-    testset = CSL_Skeleton(data_path=data_path, label_path=label_path, frames=sample_duration, num_classes=num_classes,
+    val_set = CSL_Skeleton(data_path=data_path, label_path=label_path, frames=sample_duration, num_classes=num_classes,
         selected_joints=selected_joints, split_to_channels=split_to_channels, train=False, transform=transform)
-    logger.info("Dataset samples: {}".format(len(trainset)+len(testset)))
-    trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
-    testloader = DataLoader(testset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
+    logger.info("Dataset samples: {}".format(len(train_set)+len(val_set)))
+    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
+    val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     # Create model
     model = GCN(in_channels=in_channels, num_class=num_classes, graph_args={'layout': 'ntu-rgb+d'},
                  edge_importance_weighting=True).to(device)
@@ -68,10 +68,10 @@ if __name__ == '__main__':
     logger.info("Training Started".center(60, '#'))
     for epoch in range(epochs):
         # Train the model
-        train(model, criterion, optimizer, trainloader, device, epoch, logger, log_interval, writer)
+        train_epoch(model, criterion, optimizer, train_loader, device, epoch, logger, log_interval, writer)
 
         # Validate the model
-        validation(model, criterion, testloader, device, epoch, logger, writer)
+        val_epoch(model, criterion, val_loader, device, epoch, logger, writer)
 
         # Save model
         torch.save(model.state_dict(), os.path.join(model_path, "slr_gcn_epoch{:03d}.pth".format(epoch+1)))

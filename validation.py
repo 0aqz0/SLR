@@ -1,7 +1,7 @@
 import torch
 from sklearn.metrics import accuracy_score
 
-def validation(model, criterion, dataloader, device, epoch, logger, writer):
+def val_epoch(model, criterion, dataloader, device, epoch, logger, writer):
     model.eval()
     losses = []
     all_label = []

@@ -10,8 +10,8 @@ from torch.utils.data import DataLoader, random_split
 from torch.utils.tensorboard import SummaryWriter
 from models.LSTM import LSTM
 from dataset import CSL_Skeleton
-from train import train
-from validation import validation
+from train import train_epoch
+from validation import val_epoch
 
 # Path setting
 data_path = "/home/haodong/Data/CSL_Isolated/xf500_body_depth_txt"
@@ -49,13 +49,13 @@ drop_p = 0.0
 if __name__ == '__main__':
     # Load data
     transform = None # TODO
-    trainset = CSL_Skeleton(data_path=data_path, label_path=label_path, frames=sample_duration,
+    train_set = CSL_Skeleton(data_path=data_path, label_path=label_path, frames=sample_duration,
         num_classes=num_classes, selected_joints=selected_joints, train=True, transform=transform)
-    testset = CSL_Skeleton(data_path=data_path, label_path=label_path, frames=sample_duration,
+    val_set = CSL_Skeleton(data_path=data_path, label_path=label_path, frames=sample_duration,
         num_classes=num_classes, selected_joints=selected_joints, train=False, transform=transform)
-    logger.info("Dataset samples: {}".format(len(trainset)+len(testset)))
-    trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
-    testloader = DataLoader(testset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
+    logger.info("Dataset samples: {}".format(len(train_set)+len(val_set)))
+    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
+    val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     # Create model
     model = LSTM(lstm_input_size=lstm_input_size, lstm_hidden_size=lstm_hidden_size, lstm_num_layers=lstm_num_layers,
         num_classes=num_classes, hidden1=hidden1, drop_p=drop_p).to(device)
@@ -71,10 +71,10 @@ if __name__ == '__main__':
     logger.info("Training Started".center(60, '#'))
     for epoch in range(epochs):
         # Train the model
-        train(model, criterion, optimizer, trainloader, device, epoch, logger, log_interval, writer)
+        train_epoch(model, criterion, optimizer, train_loader, device, epoch, logger, log_interval, writer)
 
         # Validate the model
-        validation(model, criterion, testloader, device, epoch, logger, writer)
+        val_epoch(model, criterion, val_loader, device, epoch, logger, writer)
 
         # Save model
         torch.save(model.state_dict(), os.path.join(model_path, "slr_skeleton_epoch{:03d}.pth".format(epoch+1)))

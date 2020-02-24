@@ -1,7 +1,7 @@
 import torch
 from sklearn.metrics import accuracy_score
 
-def train(model, criterion, optimizer, dataloader, device, epoch, logger, log_interval, writer):
+def train_epoch(model, criterion, optimizer, dataloader, device, epoch, logger, log_interval, writer):
     model.train()
     losses = []
     all_label = []

@@ -11,8 +11,8 @@ from torch.utils.tensorboard import SummaryWriter
 import torchvision.transforms as transforms
 from models.ConvLSTM import CRNN, ResCRNN
 from dataset import CSL_Isolated
-from train import train
-from validation import validation
+from train import train_epoch
+from validation import val_epoch
 
 # Path setting
 data_path = "/home/haodong/Data/CSL_Isolated/color_video_125000"
@@ -48,10 +48,13 @@ if __name__ == '__main__':
                                     transforms.ToTensor(),
                                     transforms.Normalize(mean=[0.5], std=[0.5])])
     dataset = CSL_Isolated(data_path=data_path, label_path=label_path, frames=sample_duration, num_classes=num_classes, transform=transform)
-    trainset, testset = random_split(dataset, [int(0.8*len(dataset)), int(0.2*len(dataset))])
-    logger.info("Dataset samples: {}".format(len(dataset)))
-    trainloader = DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
-    testloader = DataLoader(testset, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
+    train_set = CSL_Isolated(data_path=data_path, label_path=label_path, frames=sample_duration,
+        num_classes=num_classes, train=True, transform=transform)
+    val_set = CSL_Isolated(data_path=data_path, label_path=label_path, frames=sample_duration,
+        num_classes=num_classes, train=False, transform=transform)
+    logger.info("Dataset samples: {}".format(len(train_set)+len(val_set)))
+    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
+    val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     # Create model
     # model = CRNN(img_depth=sample_duration, img_height=sample_size, img_width=sample_size, num_classes=num_classes).to(device)
     model = ResCRNN(img_depth=sample_duration, img_height=sample_size, img_width=sample_size, num_classes=num_classes).to(device)
@@ -67,10 +70,10 @@ if __name__ == '__main__':
     logger.info("Training Started".center(60, '#'))
     for epoch in range(epochs):
         # Train the model
-        train(model, criterion, optimizer, trainloader, device, epoch, logger, log_interval, writer)
+        train_epoch(model, criterion, optimizer, train_loader, device, epoch, logger, log_interval, writer)
 
         # Validate the model
-        validation(model, criterion, testloader, device, epoch, logger, writer)
+        val_epoch(model, criterion, val_loader, device, epoch, logger, writer)
 
         # Save model
         torch.save(model.state_dict(), os.path.join(model_path, "slr_convlstm_epoch{:03d}.pth".format(epoch+1)))
