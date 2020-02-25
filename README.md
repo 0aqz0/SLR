@@ -30,7 +30,7 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
 
 | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
 | ------------ | ------- | ------- | ------------- | -------------- |
-| CSL_Skeleton | 100     | 25,000  | 84.36%        | 0.495949       |
+| CSL_Skeleton | 100     | 25,000  | 84.30%        | 0.488253       |
 | CSL_Skeleton | 500     | 125,000 | 70.62%        | 1.078730       |
 
 ## Todos
