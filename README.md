@@ -35,8 +35,8 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
 
 ## Todos
 
-- validation/test
 - confusion matrix/visualize error output
+- r2+1d, slowfast
 - seq-to-seq learning
 - attension machanism
 - CTC loss
