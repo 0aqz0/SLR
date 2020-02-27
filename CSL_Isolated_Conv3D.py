@@ -59,7 +59,7 @@ if __name__ == '__main__':
     # Create model
     # model = CNN3D(sample_size=sample_size, sample_duration=sample_duration, drop_p=drop_p,
     #             hidden1=hidden1, hidden2=hidden2, num_classes=num_classes).to(device)
-    model = resnet18(pretrained=True, progress=True, sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes).to(device)
+    model = resnet34(pretrained=True, progress=True, sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes).to(device)
     # model = r3d_18(pretrained=True, num_classes=num_classes).to(device)
     # Run the model parallelly
     if torch.cuda.device_count() > 1:
