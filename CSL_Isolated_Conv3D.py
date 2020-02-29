@@ -9,14 +9,14 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 from torch.utils.tensorboard import SummaryWriter
 import torchvision.transforms as transforms
-from models.Conv3D import CNN3D, resnet18, resnet34, r3d_18
+from models.Conv3D import CNN3D, resnet18, resnet34, resnet50, r3d_18
 from dataset import CSL_Isolated
 from train import train_epoch
-from validation import val_epoch
+from test import test
 
 # Path setting
-data_path = "/home/haodong/Data/CSL_Isolated_1/color_video_125000"
-label_path = "/home/haodong/Data/CSL_Isolated_1/dictionary.txt"
+data_path = "/home/haodong/Data/CSL_Isolated/color_video_125000"
+label_path = "/home/haodong/Data/CSL_Isolated/dictionary.txt"
 model_path = "/home/haodong/Data/cnn3d_models"
 log_path = "log/cnn3d_{:%Y-%m-%d_%H-%M-%S}.log".format(datetime.now())
 sum_path = "runs/slr_cnn3d_{:%Y-%m-%d_%H-%M-%S}".format(datetime.now())
@@ -51,15 +51,15 @@ if __name__ == '__main__':
                                     transforms.Normalize(mean=[0.5], std=[0.5])])
     train_set = CSL_Isolated(data_path=data_path, label_path=label_path, frames=sample_duration,
         num_classes=num_classes, train=True, transform=transform)
-    val_set = CSL_Isolated(data_path=data_path, label_path=label_path, frames=sample_duration,
+    test_set = CSL_Isolated(data_path=data_path, label_path=label_path, frames=sample_duration,
         num_classes=num_classes, train=False, transform=transform)
-    logger.info("Dataset samples: {}".format(len(train_set)+len(val_set)))
+    logger.info("Dataset samples: {}".format(len(train_set)+len(test_set)))
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
-    val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
+    test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
     # Create model
     # model = CNN3D(sample_size=sample_size, sample_duration=sample_duration, drop_p=drop_p,
     #             hidden1=hidden1, hidden2=hidden2, num_classes=num_classes).to(device)
-    model = resnet34(pretrained=True, progress=True, sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes).to(device)
+    model = resnet50(pretrained=True, progress=True, sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes).to(device)
     # model = r3d_18(pretrained=True, num_classes=num_classes).to(device)
     # Run the model parallelly
     if torch.cuda.device_count() > 1:
@@ -75,8 +75,8 @@ if __name__ == '__main__':
         # Train the model
         train_epoch(model, criterion, optimizer, train_loader, device, epoch, logger, log_interval, writer)
 
-        # Validate the model
-        val_epoch(model, criterion, val_loader, device, epoch, logger, writer)
+        # Test the model
+        test(model, criterion, test_loader, device, epoch, logger, writer)
 
         # Save model
         torch.save(model.state_dict(), os.path.join(model_path, "slr_cnn3d_epoch{:03d}.pth".format(epoch+1)))
