@@ -76,7 +76,10 @@ class CSL_Isolated(Dataset):
         return {'data': images, 'label': label}
 
     def label_to_word(self, label):
-        return self.labels['{:06d}'.format(label.item())]
+        if isinstance(label, torch.Tensor):
+            return self.labels['{:06d}'.format(label.item())]
+        elif isinstance(label, int):
+            return self.labels['{:06d}'.format(label)]
 
 
 """
@@ -180,18 +183,21 @@ class CSL_Skeleton(Dataset):
         return {'data': data, 'label': label}
 
     def label_to_word(self, label):
-        return self.labels['{:06d}'.format(label.item())]
+        if isinstance(label, torch.Tensor):
+            return self.labels['{:06d}'.format(label.item())]
+        elif isinstance(label, int):
+            return self.labels['{:06d}'.format(label)]
 
 
 # Test
 if __name__ == '__main__':
-    # transform = transforms.Compose([transforms.Resize([128, 128]), transforms.ToTensor()])
-    # dataset = CSL_Isolated(data_path="/home/aistudio/data/data20273/CSL_Isolated_125000",
-    #     label_path='/home/aistudio/data/data20273/CSL_Isolated_125000/dictionary.txt', transform=transform)    # print(len(dataset))
+    transform = transforms.Compose([transforms.Resize([128, 128]), transforms.ToTensor()])
+    dataset = CSL_Isolated(data_path="/home/haodong/Data/CSL_Isolated/color_video_125000",
+        label_path='/home/haodong/Data/CSL_Isolated/dictionary.txt', transform=transform)    # print(len(dataset))
     # # print(dataset[1000]['images'].shape)
-    dataset = CSL_Skeleton(data_path="/home/haodong/Data/CSL_Isolated_1/xf500_body_depth_txt",
-        label_path="/home/haodong/Data/CSL_Isolated_1/dictionary.txt", selected_joints=['SPINEBASE', 'SPINEMID', 'HANDTIPRIGHT'], split_to_channels=True)
+    # dataset = CSL_Skeleton(data_path="/home/haodong/Data/CSL_Isolated/xf500_body_depth_txt",
+    #     label_path="/home/haodong/Data/CSL_Isolated/dictionary.txt", selected_joints=['SPINEBASE', 'SPINEMID', 'HANDTIPRIGHT'], split_to_channels=True)
     # print(dataset[1000])
-    # label = dataset[1000]['label']
-    # print(dataset.label_to_word(label))
-    dataset[1000]
+    label = dataset[1000]['label']
+    print(dataset.label_to_word(label))
+    # dataset[1000]
