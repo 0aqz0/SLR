@@ -422,7 +422,7 @@ class r3d_18(nn.Module):
         # print(out.shape)
         # Flatten the layer to fc
         out = out.flatten(1)
-        out = F.relu(self.fc1(out))
+        out = self.fc1(out)
 
         return out
 
@@ -444,7 +444,7 @@ class mc3_18(nn.Module):
         # print(out.shape)
         # Flatten the layer to fc
         out = out.flatten(1)
-        out = F.relu(self.fc1(out))
+        out = self.fc1(out)
 
         return out
 
@@ -466,7 +466,7 @@ class r2plus1d_18(nn.Module):
         # print(out.shape)
         # Flatten the layer to fc
         out = out.flatten(1)
-        out = F.relu(self.fc1(out))
+        out = self.fc1(out)
 
         return out
 
