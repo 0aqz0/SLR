@@ -12,7 +12,7 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
    | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
    | ------------ | ------- | ------- | ------------- | -------------- |
    | CSL_Isolated | 100     | 25,000  | 58.86%        | 1.560049       |
-   | CSL_Isolated | 500     | 125,000 |               |                |
+   | CSL_Isolated | 500     | 125,000 | 45.07%        | 2.255563       |
    
 2. **3D ResNet**
 
@@ -23,7 +23,14 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
    | ResNet34 | CSL_Isolated | 100     | 25,000  | 94.78%        | 0.207592       |
    | ResNet34 | CSL_Isolated | 500     | 125,000 | 81.61%        | 0.750424       |
    | ResNet50 | CSL_Isolated | 100     | 25,000  | 94.36%        | 0.232631       |
-   | ResNet50 | CSL_Isolated | 500     | 125,000 |               |                |
+   | ResNet50 | CSL_Isolated | 500     | 125,000 | 83.15%        | 0.803212       |
+
+3. **ResNet (2+1)D**
+
+   | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
+   | ------------ | ------- | ------- | ------------- | -------------- |
+   | CSL_Isolated | 100     | 25,000  | 0.043099      | 98.68%         |
+   | CSL_Isolated | 500     | 125,000 |               |                |
 
 ### GCN
 
@@ -41,7 +48,8 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
 
 ## Todos
 
-- r2+1d, slowfast
+- slowfast
+- cross validation
 - seq-to-seq learning
 - attension machanism
 - CTC loss
