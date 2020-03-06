@@ -28,7 +28,7 @@ logger.info('Logging to file...')
 writer = SummaryWriter(sum_path)
 
 # Use specific gpus
-os.environ["CUDA_VISIBLE_DEVICES"]="1"
+os.environ["CUDA_VISIBLE_DEVICES"]="3"
 # Device setting
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
