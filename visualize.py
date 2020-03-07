@@ -4,9 +4,10 @@ from torch.utils.data import DataLoader
 import torchvision.transforms as transforms
 from sklearn.metrics import accuracy_score, confusion_matrix
 from dataset import CSL_Isolated
-from models.Conv3D import resnet18, resnet34, resnet50
+from models.Conv3D import resnet18, resnet34, resnet50, r2plus1d_18
 import numpy as np
 import matplotlib.pyplot as plt
+from numpy import savetxt
 
 def get_label_and_pred(model, dataloader, device):
     all_label = []
@@ -29,7 +30,7 @@ def get_label_and_pred(model, dataloader, device):
     return all_label, all_pred
 
 
-def plot_confusion_matrix(confmat, save_path='confmat.png', normalize=False):
+def plot_confusion_matrix(confmat, save_path='confmat.png', normalize=True):
     # Normalize the matrix
     if normalize:
         confmat = confmat.astype('float') / confmat.sum(axis=1)[:, np.newaxis]
@@ -54,9 +55,9 @@ def plot_confusion_matrix(confmat, save_path='confmat.png', normalize=False):
 # Path setting
 data_path = "/home/haodong/Data/CSL_Isolated/color_video_125000"
 label_path = "/home/haodong/Data/CSL_Isolated/dictionary.txt"
-model_path = "/home/haodong/Data/visualize_models/resnet18.pth"
+model_path = "/home/haodong/Data/visualize_models/r2plus1d.pth"
 # Use specific gpus
-os.environ["CUDA_VISIBLE_DEVICES"]="3"
+os.environ["CUDA_VISIBLE_DEVICES"]="2"
 # Device setting
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -75,7 +76,8 @@ test_set = CSL_Isolated(data_path=data_path, label_path=label_path, frames=sampl
 test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
 
 # Create model
-model = resnet18(pretrained=True, progress=True, sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes).to(device)
+# model = resnet50(pretrained=True, progress=True, sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes).to(device)
+model = r2plus1d_18(pretrained=True, num_classes=num_classes).to(device)
 # Run the model parallelly
 if torch.cuda.device_count() > 1:
     logger.info("Using {} GPUs".format(torch.cuda.device_count()))
@@ -89,5 +91,7 @@ matrix = confusion_matrix(all_label, all_pred)
 plot_confusion_matrix(matrix)
 sorted_index = np.diag(matrix).argsort()
 for i in range(10):
-    # print(sorted_index[i])
-    print(test_set.label_to_word(int(sorted_index[i])))
+    # print(type(sorted_index[i]))
+    print(test_set.label_to_word(int(sorted_index[i])), matrix[sorted_index[i]][sorted_index[i]])
+# Save to csv
+savetxt('matrix.csv', matrix, delimiter=',')
