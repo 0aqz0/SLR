@@ -5,6 +5,13 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
 
 ### CNN+LSTM
 
+1. **four layers of Conv2d + one layer of LSTM**
+
+   | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
+   | ------------ | ------- | ------- | ------------- | -------------- |
+   | CSL_Isolated | 100     | 25,000  |               |                |
+   | CSL_Isolated | 500     | 125,000 |               |                |
+
 ### 3D CNN
 
 1. **three layers of Conv3d**
@@ -16,14 +23,16 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
    
 2. **3D ResNet**
 
-   | Method   | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
-   | -------- | ------------ | ------- | ------- | ------------- | -------------- |
-   | ResNet18 | CSL_Isolated | 100     | 25,000  | 93.30%        | 0.246169       |
-   | ResNet18 | CSL_Isolated | 500     | 125,000 | 79.42%        | 0.800490       |
-   | ResNet34 | CSL_Isolated | 100     | 25,000  | 94.78%        | 0.207592       |
-   | ResNet34 | CSL_Isolated | 500     | 125,000 | 81.61%        | 0.750424       |
-   | ResNet50 | CSL_Isolated | 100     | 25,000  | 94.36%        | 0.232631       |
-   | ResNet50 | CSL_Isolated | 500     | 125,000 | 83.15%        | 0.803212       |
+   | Method    | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
+   | --------- | ------------ | ------- | ------- | ------------- | -------------- |
+   | ResNet18  | CSL_Isolated | 100     | 25,000  | 93.30%        | 0.246169       |
+   | ResNet18  | CSL_Isolated | 500     | 125,000 | 79.42%        | 0.800490       |
+   | ResNet34  | CSL_Isolated | 100     | 25,000  | 94.78%        | 0.207592       |
+   | ResNet34  | CSL_Isolated | 500     | 125,000 | 81.61%        | 0.750424       |
+   | ResNet50  | CSL_Isolated | 100     | 25,000  | 94.36%        | 0.232631       |
+   | ResNet50  | CSL_Isolated | 500     | 125,000 | 83.15%        | 0.803212       |
+   | ResNet101 | CSL_Isolated | 100     | 25,000  | 95.26%        | 0.205430       |
+   | ResNet101 | CSL_Isolated | 500     | 125,000 |               |                |
 
 3. **ResNet (2+1)D**
 
@@ -48,9 +57,8 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
 
 ## Todos
 
-- slowfast
-- cross validation
-- seq-to-seq learning
 - attension machanism
+- slowfast/two-stream
+- seq-to-seq learning
 - CTC loss
 
