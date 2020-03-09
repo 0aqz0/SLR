@@ -1,6 +1,11 @@
 # SLR
 sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
 
+## Requirements
+
+- Download and extract **[CSL Dataset](http://home.ustc.edu.cn/~pjh/openresources/cslr-dataset-2015/index.html)**
+- Download and install **[PyTorch](https://pytorch.org/)**
+
 ## Models
 
 ### CNN+LSTM
@@ -9,7 +14,7 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
 
    | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
    | ------------ | ------- | ------- | ------------- | -------------- |
-   | CSL_Isolated | 100     | 25,000  |               |                |
+   | CSL_Isolated | 100     | 25,000  | 82.08%        | 0.734426       |
    | CSL_Isolated | 500     | 125,000 |               |                |
 
 ### 3D CNN

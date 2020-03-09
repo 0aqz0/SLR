@@ -33,7 +33,6 @@ os.environ["CUDA_VISIBLE_DEVICES"]="2"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyperparams
-num_classes = 100
 epochs = 100
 batch_size = 16
 learning_rate = 1e-4
@@ -41,9 +40,7 @@ weight_decay = 1e-5
 log_interval = 20
 sample_size = 128
 sample_duration = 16
-drop_p = 0.0
-hidden1, hidden2, hidden3 = 512, 256, 256
-cnn_embed_dim = 512
+num_classes = 100
 lstm_hidden_size = 512
 lstm_num_layers = 1
 
@@ -61,9 +58,8 @@ if __name__ == '__main__':
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     # Create model
-    model = CRNN(sample_size=sample_size, sample_duration=sample_duration, drop_p=drop_p, hidden1=hidden1,
-        hidden2=hidden2, hidden3=hidden3, cnn_embed_dim=cnn_embed_dim, lstm_hidden_size=lstm_hidden_size,
-        lstm_num_layers=lstm_num_layers, num_classes=num_classes).to(device)
+    model = CRNN(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes,
+                lstm_hidden_size=lstm_hidden_size, lstm_num_layers=lstm_num_layers).to(device)
     # model = ResCRNN(sample_size=sample_size, sample_duration=sample_duration, drop_p=drop_p, hidden1=hidden1,
     #     hidden2=hidden2, hidden3=hidden3, cnn_embed_dim=cnn_embed_dim, lstm_hidden_size=lstm_hidden_size,
     #     lstm_num_layers=lstm_num_layers, num_classes=num_classes).to(device)

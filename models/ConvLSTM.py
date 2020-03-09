@@ -9,15 +9,11 @@ import math
 Implementation of CNN+LSTM.
 """
 class CRNN(nn.Module):
-    def __init__(self, sample_size=256, sample_duration=16, drop_p=0.0, hidden1=1024, hidden2=512, hidden3=512,
-                cnn_embed_dim=512, lstm_hidden_size=512, lstm_num_layers=1, num_classes=100):
+    def __init__(self, sample_size=256, sample_duration=16, num_classes=100,
+                lstm_hidden_size=512, lstm_num_layers=1):
         super(CRNN, self).__init__()
         self.sample_size = sample_size
         self.sample_duration = sample_duration
-        self.cnn_embed_dim = cnn_embed_dim
-        self.lstm_input_size = self.cnn_embed_dim
-        self.lstm_hidden_size = lstm_hidden_size
-        self.lstm_num_layers = lstm_num_layers
         self.num_classes = num_classes
 
         # network params
@@ -26,11 +22,12 @@ class CRNN(nn.Module):
         self.s1, self.s2, self.s3, self.s4 = (2, 2), (1, 1), (1, 1), (1, 1)
         self.p1, self.p2, self.p3, self.p4 = (0, 0), (0, 0), (0, 0), (0, 0)
         self.d1, self.d2, self.d3, self.d4 = (1, 1), (1, 1), (1, 1), (1, 1)
-        self.hidden1, self.hidden2, self.hidden3 = hidden1, hidden2, hidden3
-        self.drop_p = drop_p
+        self.lstm_input_size = self.ch4
+        self.lstm_hidden_size = lstm_hidden_size
+        self.lstm_num_layers = lstm_num_layers
 
         # network architecture
-        # in_channels=1 for grayscale
+        # in_channels=3 for rgb
         self.conv1 = nn.Sequential(
             nn.Conv2d(in_channels=3, out_channels=self.ch1, kernel_size=self.k1, stride=self.s1, padding=self.p1, dilation=self.d1),
             nn.BatchNorm2d(self.ch1, momentum=0.01),
@@ -65,13 +62,7 @@ class CRNN(nn.Module):
             num_layers=self.lstm_num_layers,
             batch_first=True,
         )
-        # self.fc1 = nn.Linear(self.ch4, self.cnn_embed_dim)
-        # self.bn1 = nn.BatchNorm1d(self.hidden1, momentum=0.01)
-        # self.fc2 = nn.Linear(self.hidden1, self.hidden2)
-        # self.bn2 = nn.BatchNorm1d(self.hidden2, momentum=0.01)
-        # self.fc3 = nn.Linear(self.hidden2, self.cnn_embed_dim)
-        # self.fc4 = nn.Linear(self.lstm_hidden_size, self.hidden3)
-        self.fc5 = nn.Linear(self.lstm_hidden_size, self.num_classes)
+        self.fc1 = nn.Linear(self.lstm_hidden_size, self.num_classes)
 
     def forward(self, x):
         # CNN
@@ -84,16 +75,8 @@ class CRNN(nn.Module):
             out = self.conv2(out)
             out = self.conv3(out)
             out = self.conv4(out)
-            # MLP
-            out = out.view(out.size(0), -1)
             # print(out.shape)
-            # out = self.bn1(self.fc1(out))
-            # out = F.relu(out)
-            # out = self.bn2(self.fc2(out))
-            # out = F.relu(out)
-            # out = F.dropout(out, p=self.drop_p, training=self.training)
-            # out = self.fc3(out)
-            # out = self.fc1(out)
+            out = out.view(out.size(0), -1)
             cnn_embed_seq.append(out)
 
         cnn_embed_seq = torch.stack(cnn_embed_seq, dim=0)
@@ -107,9 +90,7 @@ class CRNN(nn.Module):
         out, (h_n, c_n) = self.lstm(cnn_embed_seq, None)
         # MLP
         # out: (batch, seq, feature), choose the last time step
-        # out = F.relu(self.fc4(out[:, -1, :]))
-        # out = F.dropout(out, p=self.drop_p, training=self.training)
-        out = self.fc5(out[:, -1, :])
+        out = self.fc1(out[:, -1, :])
 
         return out
 
