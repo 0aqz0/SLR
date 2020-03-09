@@ -12,7 +12,7 @@ import torchvision.transforms as transforms
 from models.ConvLSTM import CRNN, ResCRNN
 from dataset import CSL_Isolated
 from train import train_epoch
-from validation import val_epoch
+from test import test
 
 # Path setting
 data_path = "/home/haodong/Data/CSL_Isolated/color_video_125000"
@@ -28,18 +28,24 @@ logger.info('Logging to file...')
 writer = SummaryWriter(sum_path)
 
 # Use specific gpus
-os.environ["CUDA_VISIBLE_DEVICES"]="1,2"
+os.environ["CUDA_VISIBLE_DEVICES"]="2"
 # Device setting
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyperparams
-num_classes = 500
-epochs = 500
-batch_size = 32
+num_classes = 100
+epochs = 100
+batch_size = 16
 learning_rate = 1e-4
-log_interval = 100
+weight_decay = 1e-5
+log_interval = 20
 sample_size = 128
 sample_duration = 16
+drop_p = 0.0
+hidden1, hidden2, hidden3 = 512, 256, 256
+cnn_embed_dim = 512
+lstm_hidden_size = 512
+lstm_num_layers = 1
 
 # Train with Conv+LSTM
 if __name__ == '__main__':
@@ -47,24 +53,27 @@ if __name__ == '__main__':
     transform = transforms.Compose([transforms.Resize([sample_size, sample_size]),
                                     transforms.ToTensor(),
                                     transforms.Normalize(mean=[0.5], std=[0.5])])
-    dataset = CSL_Isolated(data_path=data_path, label_path=label_path, frames=sample_duration, num_classes=num_classes, transform=transform)
     train_set = CSL_Isolated(data_path=data_path, label_path=label_path, frames=sample_duration,
         num_classes=num_classes, train=True, transform=transform)
-    val_set = CSL_Isolated(data_path=data_path, label_path=label_path, frames=sample_duration,
+    test_set = CSL_Isolated(data_path=data_path, label_path=label_path, frames=sample_duration,
         num_classes=num_classes, train=False, transform=transform)
-    logger.info("Dataset samples: {}".format(len(train_set)+len(val_set)))
+    logger.info("Dataset samples: {}".format(len(train_set)+len(test_set)))
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
-    val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
+    test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     # Create model
-    # model = CRNN(img_depth=sample_duration, img_height=sample_size, img_width=sample_size, num_classes=num_classes).to(device)
-    model = ResCRNN(img_depth=sample_duration, img_height=sample_size, img_width=sample_size, num_classes=num_classes).to(device)
+    model = CRNN(sample_size=sample_size, sample_duration=sample_duration, drop_p=drop_p, hidden1=hidden1,
+        hidden2=hidden2, hidden3=hidden3, cnn_embed_dim=cnn_embed_dim, lstm_hidden_size=lstm_hidden_size,
+        lstm_num_layers=lstm_num_layers, num_classes=num_classes).to(device)
+    # model = ResCRNN(sample_size=sample_size, sample_duration=sample_duration, drop_p=drop_p, hidden1=hidden1,
+    #     hidden2=hidden2, hidden3=hidden3, cnn_embed_dim=cnn_embed_dim, lstm_hidden_size=lstm_hidden_size,
+    #     lstm_num_layers=lstm_num_layers, num_classes=num_classes).to(device)
     # Run the model parallelly
     if torch.cuda.device_count() > 1:
         logger.info("Using {} GPUs".format(torch.cuda.device_count()))
         model = nn.DataParallel(model)
     # Create loss criterion & optimizer
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
 
     # Start training
     logger.info("Training Started".center(60, '#'))
@@ -72,8 +81,8 @@ if __name__ == '__main__':
         # Train the model
         train_epoch(model, criterion, optimizer, train_loader, device, epoch, logger, log_interval, writer)
 
-        # Validate the model
-        val_epoch(model, criterion, val_loader, device, epoch, logger, writer)
+        # Test the model
+        test(model, criterion, test_loader, device, epoch, logger, writer)
 
         # Save model
         torch.save(model.state_dict(), os.path.join(model_path, "slr_convlstm_epoch{:03d}.pth".format(epoch+1)))
