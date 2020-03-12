@@ -100,7 +100,7 @@ Implementation of Resnet+LSTM
 """
 class ResCRNN(nn.Module):
     def __init__(self, sample_size=256, sample_duration=16, num_classes=100,
-                lstm_hidden_size=512, lstm_num_layers=1):
+                lstm_hidden_size=512, lstm_num_layers=1, arch="resnet18"):
         super(ResCRNN, self).__init__()
         self.sample_size = sample_size
         self.sample_duration = sample_duration
@@ -111,7 +111,16 @@ class ResCRNN(nn.Module):
         self.lstm_num_layers = lstm_num_layers
 
         # network architecture
-        resnet = models.resnet18(pretrained=True)
+        if arch == "resnet18":
+            resnet = models.resnet18(pretrained=True)
+        elif arch == "resnet34":
+            resnet = models.resnet34(pretrained=True)
+        elif arch == "resnet50":
+            resnet = models.resnet50(pretrained=True)
+        elif arch == "resnet101":
+            resnet = models.resnet101(pretrained=True)
+        elif arch == "resnet152":
+            resnet = models.resnet152(pretrained=True)
         # delete the last fc layer
         modules = list(resnet.children())[:-1]
         self.resnet = nn.Sequential(*modules)
@@ -164,5 +173,5 @@ if __name__ == '__main__':
         label_path="/home/haodong/Data/CSL_Isolated/dictionary.txt", frames=sample_duration,
         num_classes=num_classes, transform=transform)
     # crnn = CRNN()
-    crnn = ResCRNN(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes)
+    crnn = ResCRNN(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes, arch="resnet152")
     print(crnn(dataset[0]['data'].unsqueeze(0)))
