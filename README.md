@@ -17,6 +17,13 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
    | CSL_Isolated | 100     | 25,000  | 82.08%        | 0.734426       |
    | CSL_Isolated | 500     | 125,000 |               |                |
 
+2. **ResNet + one layer of LSTM**
+
+   | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
+   | ------------ | ------- | ------- | ------------- | -------------- |
+   | CSL_Isolated | 100     | 25,000  | 92.06%        | 0.279240       |
+   | CSL_Isolated | 500     | 125,000 |               |                |
+
 ### 3D CNN
 
 1. **three layers of Conv3d**
@@ -44,7 +51,7 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
    | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
    | ------------ | ------- | ------- | ------------- | -------------- |
    | CSL_Isolated | 100     | 25,000  | 0.043099      | 98.68%         |
-   | CSL_Isolated | 500     | 125,000 |               |                |
+   | CSL_Isolated | 500     | 125,000 | 0.234880      | 94.85%         |
 
 ### GCN
 
@@ -62,7 +69,7 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
 
 ## Todos
 
-- attension machanism
+- attention mechanism
 - slowfast/two-stream
 - seq-to-seq learning
 - CTC loss
