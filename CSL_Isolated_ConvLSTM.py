@@ -58,11 +58,10 @@ if __name__ == '__main__':
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     # Create model
-    model = CRNN(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes,
+    # model = CRNN(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes,
+    #             lstm_hidden_size=lstm_hidden_size, lstm_num_layers=lstm_num_layers).to(device)
+    model = ResCRNN(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes,
                 lstm_hidden_size=lstm_hidden_size, lstm_num_layers=lstm_num_layers).to(device)
-    # model = ResCRNN(sample_size=sample_size, sample_duration=sample_duration, drop_p=drop_p, hidden1=hidden1,
-    #     hidden2=hidden2, hidden3=hidden3, cnn_embed_dim=cnn_embed_dim, lstm_hidden_size=lstm_hidden_size,
-    #     lstm_num_layers=lstm_num_layers, num_classes=num_classes).to(device)
     # Run the model parallelly
     if torch.cuda.device_count() > 1:
         logger.info("Using {} GPUs".format(torch.cuda.device_count()))

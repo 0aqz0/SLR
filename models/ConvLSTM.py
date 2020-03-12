@@ -99,20 +99,16 @@ class CRNN(nn.Module):
 Implementation of Resnet+LSTM
 """
 class ResCRNN(nn.Module):
-    def __init__(self, sample_size=128, sample_duration=16, drop_p=0.0, hidden1=1024, hidden2=512, hidden3=512,
-                cnn_embed_dim=512, lstm_hidden_size=512, lstm_num_layers=1, num_classes=100):
+    def __init__(self, sample_size=256, sample_duration=16, num_classes=100,
+                lstm_hidden_size=512, lstm_num_layers=1):
         super(ResCRNN, self).__init__()
         self.sample_size = sample_size
         self.sample_duration = sample_duration
-        self.cnn_embed_dim = cnn_embed_dim
-        self.lstm_input_size = self.cnn_embed_dim
-        self.lstm_hidden_size = lstm_hidden_size
-        self.lstm_num_layers = lstm_num_layers
         self.num_classes = num_classes
 
         # network params
-        self.hidden1, self.hidden2, self.hidden3 = hidden1, hidden2, hidden3
-        self.drop_p = drop_p
+        self.lstm_hidden_size = lstm_hidden_size
+        self.lstm_num_layers = lstm_num_layers
 
         # network architecture
         resnet = models.resnet18(pretrained=True)
@@ -120,37 +116,22 @@ class ResCRNN(nn.Module):
         modules = list(resnet.children())[:-1]
         self.resnet = nn.Sequential(*modules)
         self.lstm = nn.LSTM(
-            input_size=self.lstm_input_size,
+            input_size=resnet.fc.in_features,
             hidden_size=self.lstm_hidden_size,
             num_layers=self.lstm_num_layers,
             batch_first=True,
         )
-        self.fc1 = nn.Linear(resnet.fc.in_features, self.hidden1)
-        self.bn1 = nn.BatchNorm1d(self.hidden1, momentum=0.01)
-        self.fc2 = nn.Linear(self.hidden1, self.hidden2)
-        self.bn2 = nn.BatchNorm1d(self.hidden2, momentum=0.01)
-        self.fc3 = nn.Linear(self.hidden2, self.cnn_embed_dim)
-        self.fc4 = nn.Linear(self.lstm_hidden_size, self.hidden3)
-        self.fc5 = nn.Linear(self.hidden3, self.num_classes)
+        self.fc1 = nn.Linear(self.lstm_hidden_size, self.num_classes)
 
     def forward(self, x):
         # CNN
         cnn_embed_seq = []
-        # print(x.shape)
         # x: (batch_size, channel, t, h, w)
         for t in range(x.size(2)):
-            # Resnet
             # with torch.no_grad():
             out = self.resnet(x[:, :, t, :, :])
-            # MLP
-            out = out.view(out.size(0), -1)
             # print(out.shape)
-            out = self.bn1(self.fc1(out))
-            out = F.relu(out)
-            out = self.bn2(self.fc2(out))
-            out = F.relu(out)
-            out = F.dropout(out, p=self.drop_p, training=self.training)
-            out = self.fc3(out)
+            out = out.view(out.size(0), -1)
             cnn_embed_seq.append(out)
 
         cnn_embed_seq = torch.stack(cnn_embed_seq, dim=0)
@@ -164,9 +145,7 @@ class ResCRNN(nn.Module):
         out, (h_n, c_n) = self.lstm(cnn_embed_seq, None)
         # MLP
         # out: (batch, seq, feature), choose the last time step
-        out = F.relu(self.fc4(out[:, -1, :]))
-        out = F.dropout(out, p=self.drop_p, training=self.training)
-        out = self.fc5(out)
+        out = self.fc1(out[:, -1, :])
 
         return out
 
