@@ -9,6 +9,11 @@ from functools import partial
 from collections import OrderedDict
 import math
 
+import os,inspect,sys
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+sys.path.insert(0,currentdir)
+from Attention import ProjectorBlock3D, LinearAttentionBlock3D
+
 """
 Implementation of 3D CNN.
 """
@@ -196,7 +201,7 @@ def downsample_basic_block(x, planes, stride):
 
 
 class ResNet(nn.Module):
-    def __init__(self, block, layers, shortcut_type, sample_size, sample_duration, num_classes=500):
+    def __init__(self, block, layers, shortcut_type, sample_size, sample_duration, attention=False, num_classes=500):
         super(ResNet, self).__init__()
         # initialize inplanes to 64, it'll be changed later
         self.inplanes = 64
@@ -219,7 +224,19 @@ class ResNet(nn.Module):
         last_size = int(math.ceil(sample_size / 32))
         self.avgpool = nn.AvgPool3d(
             (last_duration, last_size, last_size), stride=1)
-        self.fc = nn.Linear(512 * block.expansion, num_classes)
+        # attention blocks
+        self.attention = attention
+        if self.attention:
+            self.attn1 = LinearAttentionBlock3D(in_channels=512*block.expansion, normalize_attn=True)
+            self.attn2 = LinearAttentionBlock3D(in_channels=512*block.expansion, normalize_attn=True)
+            self.attn3 = LinearAttentionBlock3D(in_channels=512*block.expansion, normalize_attn=True)
+            self.attn4 = LinearAttentionBlock3D(in_channels=512*block.expansion, normalize_attn=True)
+            self.projector1 = ProjectorBlock3D(in_channels=64*block.expansion, out_channels=512*block.expansion)
+            self.projector2 = ProjectorBlock3D(in_channels=128*block.expansion, out_channels=512*block.expansion)
+            self.projector3 = ProjectorBlock3D(in_channels=256*block.expansion, out_channels=512*block.expansion)
+            self.fc = nn.Linear(512 * block.expansion * 4, num_classes)
+        else:
+            self.fc = nn.Linear(512 * block.expansion, num_classes)
         # init the weights
         for m in self.modules():
             if isinstance(m, nn.Conv3d):
@@ -263,17 +280,28 @@ class ResNet(nn.Module):
         x = self.relu(x)
         x = self.maxpool(x)
 
-        x = self.layer1(x)
-        x = self.layer2(x)
-        x = self.layer3(x)
-        x = self.layer4(x)
+        l1 = self.layer1(x)
+        l2 = self.layer2(l1)
+        l3 = self.layer3(l2)
+        l4 = self.layer4(l3)
 
-        x = self.avgpool(x)
-        # x.size(0) ------ batch_size
-        x = x.view(x.size(0), -1)
-        x = self.fc(x)
+        g = self.avgpool(l4)
+        # attention
+        if self.attention:
+            # print(l1.shape, l2.shape, l3.shape, l4.shape, g.shape)
+            c1, g1 = self.attn1(self.projector1(l1), g)
+            c2, g2 = self.attn2(self.projector2(l2), g)
+            c3, g3 = self.attn3(self.projector3(l3), g)
+            c4, g4 = self.attn4(l4, g)
+            g = torch.cat((g1,g2,g3,g4), dim=1)
+            x = self.fc(g)
+        else:
+            c1, c2, c3, c4 = None, None, None, None
+            # x.size(0) ------ batch_size
+            g = g.view(g.size(0), -1)
+            x = self.fc(g)
 
-        return x
+        return [x, c1, c2, c3, c4]
 
     def load_my_state_dict(self, state_dict):
         my_state_dict = self.state_dict()
@@ -481,11 +509,11 @@ if __name__ == '__main__':
     sample_duration = 16
     num_classes = 500
     transform = transforms.Compose([transforms.Resize([sample_size, sample_size]), transforms.ToTensor()])
-    dataset = CSL_Isolated(data_path="/home/haodong/Data/CSL_Isolated_1/color_video_125000",
-        label_path="/home/haodong/Data/CSL_Isolated_1/dictionary.txt", frames=sample_duration,
+    dataset = CSL_Isolated(data_path="/home/haodong/Data/CSL_Isolated/color_video_125000",
+        label_path="/home/haodong/Data/CSL_Isolated/dictionary.txt", frames=sample_duration,
         num_classes=num_classes, transform=transform)
     # cnn3d = CNN3D(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes)
-    cnn3d = resnet50(pretrained=True, progress=True, sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes)
+    cnn3d = resnet50(pretrained=True, progress=True, sample_size=sample_size, sample_duration=sample_duration, attention=True, num_classes=num_classes)
     # cnn3d = r3d_18(pretrained=True, num_classes=num_classes)
     # cnn3d = mc3_18(pretrained=True, num_classes=num_classes)
     # cnn3d = r2plus1d_18(pretrained=True, num_classes=num_classes)
