@@ -13,6 +13,8 @@ def test(model, criterion, dataloader, device, epoch, logger, writer):
             inputs, labels = data['data'].to(device), data['label'].to(device)
             # forward
             outputs = model(inputs)
+            if isinstance(outputs, list):
+                outputs = outputs[0]
             # compute the loss
             loss = criterion(outputs, labels.squeeze())
             losses.append(loss.item())

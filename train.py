@@ -14,6 +14,8 @@ def train_epoch(model, criterion, optimizer, dataloader, device, epoch, logger, 
         optimizer.zero_grad()
         # forward
         outputs = model(inputs)
+        if isinstance(outputs, list):
+            outputs = outputs[0]
 
         # compute the loss
         loss = criterion(outputs, labels.squeeze())
