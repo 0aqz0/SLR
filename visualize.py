@@ -1,6 +1,9 @@
 import torch
+import torch.nn.functional as F
 from torch.utils.data import DataLoader
+from torch.utils.tensorboard import SummaryWriter
 import torchvision.transforms as transforms
+import torchvision.utils as utils
 from sklearn.metrics import accuracy_score, confusion_matrix
 from dataset import CSL_Isolated
 from models.Conv3D import resnet18, resnet34, resnet50, r2plus1d_18
@@ -9,6 +12,8 @@ import matplotlib.pyplot as plt
 from numpy import savetxt
 import os
 import argparse
+from datetime import datetime
+import cv2
 
 def get_label_and_pred(model, dataloader, device):
     all_label = []
@@ -67,6 +72,51 @@ def plot_confusion_matrix(model, dataloader, device, save_path='confmat.png', no
     savetxt('matrix.csv', confmat, delimiter=',')
 
 
+def visualize_attn(I, c):
+    # Image
+    img = I.permute((1,2,0)).cpu().numpy()
+    # Heatmap
+    N, C, H, W = c.size()
+    a = F.softmax(c.view(N,C,-1), dim=2).view(N,C,H,W)
+    up_factor = 128/H
+    # print(up_factor, I.size(), c.size())
+    if up_factor > 1:
+        a = F.interpolate(a, scale_factor=up_factor, mode='bilinear', align_corners=False)
+    attn = utils.make_grid(a, nrow=4, normalize=True, scale_each=True)
+    attn = attn.permute((1,2,0)).mul(255).byte().cpu().numpy()
+    attn = cv2.applyColorMap(attn, cv2.COLORMAP_JET)
+    attn = cv2.cvtColor(attn, cv2.COLOR_BGR2RGB)
+    # Add the heatmap to the image
+    vis = 0.6 * img + 0.4 * attn
+    return torch.from_numpy(vis).permute(2,0,1)
+
+
+def plot_attention_map(model, dataloader, device):
+    # Summary writer
+    writer = SummaryWriter("runs/attention_{:%Y-%m-%d_%H-%M-%S}".format(datetime.now()))
+
+    model.eval()
+    with torch.no_grad():
+        for batch_idx, data in enumerate(dataloader):
+            # get images
+            inputs = data['data'].to(device)
+            if batch_idx == 0:
+                images = inputs[0:16,:,:,:,:]
+                I = utils.make_grid(images[:,:,0,:,:], nrow=4, normalize=True, scale_each=True)
+                writer.add_image('origin', I)
+                _, c1, c2, c3, c4 = model(images)
+                # print(I.shape, c1.shape, c2.shape, c3.shape, c4.shape)
+                attn1 = visualize_attn(I, c1[:,:,0,:,:])
+                writer.add_image('attn1', attn1)
+                attn2 = visualize_attn(I, c2[:,:,0,:,:])
+                writer.add_image('attn2', attn2)
+                attn3 = visualize_attn(I, c3[:,:,0,:,:])
+                writer.add_image('attn3', attn3)
+                attn4 = visualize_attn(I, c4[:,:,0,:,:])
+                writer.add_image('attn4', attn4)
+                break
+
+
 # Parameters manager
 parser = argparse.ArgumentParser(description='Visualization')
 parser.add_argument('--data_path', default='/home/haodong/Data/CSL_Isolated/color_video_125000',
@@ -89,6 +139,8 @@ parser.add_argument('--sample_duration', default=16,
     type=int, help='Sample duration')
 parser.add_argument('--confusion_matrix', action='store_true',
     help='Draw confusion matrix')
+parser.add_argument('--attention_map', action='store_true',
+    help='Draw attention map')
 args = parser.parse_args()
 
 # Use specific gpus
@@ -113,7 +165,7 @@ if __name__ == '__main__':
     # Create model
     if args.model == 'resnet18':
         model = resnet18(pretrained=True, progress=True, sample_size=sample_size,
-            sample_duration=sample_duration, num_classes=num_classes).to(device)
+            sample_duration=sample_duration, attention=args.attention_map, num_classes=num_classes).to(device)
     # Run the model parallelly
     if torch.cuda.device_count() > 1:
         logger.info("Using {} GPUs".format(torch.cuda.device_count()))
@@ -124,3 +176,7 @@ if __name__ == '__main__':
     # Draw confusion matrix
     if args.confusion_matrix:
         plot_confusion_matrix(model, test_loader, device)
+
+    # Draw attention map
+    if args.attention_map:
+        plot_attention_map(model, test_loader, device)
