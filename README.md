@@ -15,14 +15,14 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
    | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
    | ------------ | ------- | ------- | ------------- | -------------- |
    | CSL_Isolated | 100     | 25,000  | 82.08%        | 0.734426       |
-   | CSL_Isolated | 500     | 125,000 |               |                |
+   | CSL_Isolated | 500     | 125,000 | 71.71%        | 1.332122       |
 
 2. **ResNet + one layer of LSTM**
 
    | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
    | ------------ | ------- | ------- | ------------- | -------------- |
    | CSL_Isolated | 100     | 25,000  | 92.06%        | 0.279240       |
-   | CSL_Isolated | 500     | 125,000 |               |                |
+   | CSL_Isolated | 500     | 125,000 | 83.17%        | 0.748759       |
 
 ### 3D CNN
 
@@ -44,7 +44,7 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
    | ResNet50  | CSL_Isolated | 100     | 25,000  | 94.36%        | 0.232631       |
    | ResNet50  | CSL_Isolated | 500     | 125,000 | 83.15%        | 0.803212       |
    | ResNet101 | CSL_Isolated | 100     | 25,000  | 95.26%        | 0.205430       |
-   | ResNet101 | CSL_Isolated | 500     | 125,000 |               |                |
+   | ResNet101 | CSL_Isolated | 500     | 125,000 | 83.18%        | 0.751727       |
 
 3. **ResNet (2+1)D**
 
