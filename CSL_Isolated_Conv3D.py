@@ -28,18 +28,19 @@ logger.info('Logging to file...')
 writer = SummaryWriter(sum_path)
 
 # Use specific gpus
-os.environ["CUDA_VISIBLE_DEVICES"]="3"
+os.environ["CUDA_VISIBLE_DEVICES"]="2"
 # Device setting
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyperparams
 num_classes = 100
 epochs = 100
-batch_size = 32
+batch_size = 16
 learning_rate = 1e-5
 log_interval = 20
 sample_size = 128
 sample_duration = 16
+attention = True
 drop_p = 0.0
 hidden1, hidden2 = 512, 256
 
@@ -54,12 +55,13 @@ if __name__ == '__main__':
     test_set = CSL_Isolated(data_path=data_path, label_path=label_path, frames=sample_duration,
         num_classes=num_classes, train=False, transform=transform)
     logger.info("Dataset samples: {}".format(len(train_set)+len(test_set)))
-    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
-    test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True)
+    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=16, pin_memory=True)
+    test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True, num_workers=16, pin_memory=True)
     # Create model
     # model = CNN3D(sample_size=sample_size, sample_duration=sample_duration, drop_p=drop_p,
     #             hidden1=hidden1, hidden2=hidden2, num_classes=num_classes).to(device)
-    model = resnet101(pretrained=True, progress=True, sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes).to(device)
+    model = resnet18(pretrained=True, progress=True, sample_size=sample_size, sample_duration=sample_duration,
+                    attention=attention, num_classes=num_classes).to(device)
     # model = r2plus1d_18(pretrained=True, num_classes=num_classes).to(device)
     # Run the model parallelly
     if torch.cuda.device_count() > 1:
