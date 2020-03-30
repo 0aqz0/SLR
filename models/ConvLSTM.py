@@ -5,6 +5,11 @@ import torch.nn.functional as F
 import torchvision.models as models
 import math
 
+import os,inspect,sys
+currentdir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+sys.path.insert(0,currentdir)
+from Attention import LSTMAttentionBlock
+
 """
 Implementation of CNN+LSTM.
 """
@@ -100,7 +105,8 @@ Implementation of Resnet+LSTM
 """
 class ResCRNN(nn.Module):
     def __init__(self, sample_size=256, sample_duration=16, num_classes=100,
-                lstm_hidden_size=512, lstm_num_layers=1, arch="resnet18"):
+                lstm_hidden_size=512, lstm_num_layers=1, arch="resnet18",
+                attention=False):
         super(ResCRNN, self).__init__()
         self.sample_size = sample_size
         self.sample_duration = sample_duration
@@ -109,6 +115,7 @@ class ResCRNN(nn.Module):
         # network params
         self.lstm_hidden_size = lstm_hidden_size
         self.lstm_num_layers = lstm_num_layers
+        self.attention = attention
 
         # network architecture
         if arch == "resnet18":
@@ -130,6 +137,8 @@ class ResCRNN(nn.Module):
             num_layers=self.lstm_num_layers,
             batch_first=True,
         )
+        if self.attention:
+            self.attn_block = LSTMAttentionBlock(hidden_size=self.lstm_hidden_size)
         self.fc1 = nn.Linear(self.lstm_hidden_size, self.num_classes)
 
     def forward(self, x):
@@ -153,8 +162,11 @@ class ResCRNN(nn.Module):
         self.lstm.flatten_parameters()
         out, (h_n, c_n) = self.lstm(cnn_embed_seq, None)
         # MLP
-        # out: (batch, seq, feature), choose the last time step
-        out = self.fc1(out[:, -1, :])
+        if self.attention:
+            out = self.fc1(self.attn_block(out))
+        else:
+            # out: (batch, seq, feature), choose the last time step
+            out = self.fc1(out[:, -1, :])
 
         return out
 

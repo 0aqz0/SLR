@@ -69,6 +69,35 @@ class LinearAttentionBlock3D(nn.Module):
             g = F.adaptive_avg_pool3d(g, (1,1,1)).view(N,C)
         return c.view(N,1,T,H,W), g
 
+"""
+Dense attention block
+Reference: https://github.com/philipperemy/keras-attention-mechanism
+"""
+class LSTMAttentionBlock(nn.Module):
+    def __init__(self, hidden_size):
+        super(LSTMAttentionBlock, self).__init__()
+        self.hidden_size = hidden_size
+        self.fc1 = nn.Linear(self.hidden_size, self.hidden_size, bias=False)
+        self.fc2 = nn.Linear(self.hidden_size*2, self.hidden_size, bias=False)
+
+    def forward(self, hidden_states):
+        # (batch_size, time_steps, hidden_size)
+        score_first_part = self.fc1(hidden_states)
+        # (batch_size, hidden_size)
+        h_t = hidden_states[:,-1,:]
+        # (batch_size, time_steps)
+        score = torch.bmm(score_first_part, h_t.unsqueeze(2)).squeeze(2)
+        attention_weights = F.softmax(score, dim=1)
+        # (batch_size, hidden_size)
+        context_vector = torch.bmm(hidden_states.permute(0,2,1), attention_weights.unsqueeze(2)).squeeze(2)
+        # (batch_size, hidden_size*2)
+        pre_activation = torch.cat((context_vector, h_t), dim=1)
+        # (batch_size, hidden_size)
+        attention_vector = self.fc2(pre_activation)
+        attention_vector = torch.tanh(attention_vector)
+
+        return attention_vector
+
 # Test
 if __name__ == '__main__':
     # 2d block
@@ -81,3 +110,7 @@ if __name__ == '__main__':
     l = torch.randn(16, 3, 16, 128, 128)
     g = torch.randn(16, 3, 16, 128, 128)
     print(attention_block_3d(l, g))
+    # LSTM block
+    attention_block_lstm = LSTMAttentionBlock(hidden_size=256)
+    hidden_states = torch.randn(32, 16, 256)
+    print(attention_block_lstm(hidden_states).shape)
