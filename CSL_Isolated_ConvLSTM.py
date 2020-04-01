@@ -43,6 +43,7 @@ sample_duration = 16
 num_classes = 100
 lstm_hidden_size = 512
 lstm_num_layers = 1
+attention = True
 
 # Train with Conv+LSTM
 if __name__ == '__main__':
@@ -55,13 +56,13 @@ if __name__ == '__main__':
     test_set = CSL_Isolated(data_path=data_path, label_path=label_path, frames=sample_duration,
         num_classes=num_classes, train=False, transform=transform)
     logger.info("Dataset samples: {}".format(len(train_set)+len(test_set)))
-    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
-    test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
+    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=16, pin_memory=True)
+    test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True, num_workers=16, pin_memory=True)
     # Create model
     # model = CRNN(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes,
     #             lstm_hidden_size=lstm_hidden_size, lstm_num_layers=lstm_num_layers).to(device)
     model = ResCRNN(sample_size=sample_size, sample_duration=sample_duration, num_classes=num_classes,
-                lstm_hidden_size=lstm_hidden_size, lstm_num_layers=lstm_num_layers).to(device)
+                lstm_hidden_size=lstm_hidden_size, lstm_num_layers=lstm_num_layers, attention=attention).to(device)
     # Run the model parallelly
     if torch.cuda.device_count() > 1:
         logger.info("Using {} GPUs".format(torch.cuda.device_count()))
