@@ -33,7 +33,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]="2"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyperparams
-epochs = 100
+epochs = 200
 batch_size = 16
 learning_rate = 1e-4
 weight_decay = 1e-5
@@ -43,7 +43,7 @@ sample_duration = 16
 num_classes = 100
 lstm_hidden_size = 512
 lstm_num_layers = 1
-attention = True
+attention = False
 
 # Train with Conv+LSTM
 if __name__ == '__main__':

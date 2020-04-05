@@ -40,7 +40,7 @@ learning_rate = 1e-5
 log_interval = 20
 sample_size = 128
 sample_duration = 16
-attention = True
+attention = False
 drop_p = 0.0
 hidden1, hidden2 = 512, 256
 

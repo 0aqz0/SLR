@@ -69,8 +69,6 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
 
 ## Todos
 
-- attention mechanism
-- slowfast/two-stream
 - seq-to-seq learning
 - CTC loss
 
