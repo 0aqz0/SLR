@@ -189,6 +189,27 @@ class CSL_Skeleton(Dataset):
             return self.labels['{:06d}'.format(label)]
 
 
+"""
+Implementation of CSL Continuous Dataset
+"""
+class CSL_Continuous(Dataset):
+    def __init__(self, data_path, dict_path, corpus_path, train=True, transform=None):
+        super(CSL_Continuous, self).__init__()
+        self.data_path = data_path
+        self.dict_path = dict_path
+        self.corpus_path = corpus_path
+        self.train = train
+        self.transform = transform
+        self.signers = 50
+        self.repetition = 5
+
+    def __len__(self):
+        pass
+
+    def __getitem__(self, idx):
+        pass
+
+
 # Test
 if __name__ == '__main__':
     transform = transforms.Compose([transforms.Resize([128, 128]), transforms.ToTensor()])
