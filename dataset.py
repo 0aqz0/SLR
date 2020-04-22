@@ -254,15 +254,25 @@ class CSL_Continuous(Dataset):
                         # mark as paired
                         for i in range(len(token)):
                             paired[index+i] = True
-                tokens = []
+                # add sos
+                tokens = [self.dict['<sos>']]
                 for token in line[1].split():
                     if token in self.dict:
                         tokens.append(self.dict[token])
                     else:
                         self.unknown.add(token)
+                # add eos
+                tokens.append(self.dict['<eos>'])
                 self.corpus[line[0]] = tokens
         except Exception as e:
             raise
+        # add padding
+        length = [len(tokens) for key, tokens in self.corpus.items()]
+        self.max_length = max(length)
+        # print(max(length))
+        for key, tokens in self.corpus.items():
+            if len(tokens) < self.max_length:
+                tokens.extend([self.dict['<pad>']]*(self.max_length-len(tokens)))
         # print(self.corpus)
         # print(self.unknown)
 
