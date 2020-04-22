@@ -193,11 +193,12 @@ class CSL_Skeleton(Dataset):
 Implementation of CSL Continuous Dataset
 """
 class CSL_Continuous(Dataset):
-    def __init__(self, data_path, dict_path, corpus_path, train=True, transform=None):
+    def __init__(self, data_path, dict_path, corpus_path, frames=128, train=True, transform=None):
         super(CSL_Continuous, self).__init__()
         self.data_path = data_path
         self.dict_path = dict_path
         self.corpus_path = corpus_path
+        self.frames = frames
         self.train = train
         self.transform = transform
         self.num_sentences = 100
@@ -209,12 +210,14 @@ class CSL_Continuous(Dataset):
             self.videos_per_folder = int(0.2 * self.signers * self.repetition)
         # dictionary
         self.dict = {}
+        self.output_dim = 0
         try:
             dict_file = open(self.dict_path, 'r')
             for line in dict_file.readlines():
                 line = line.strip()
                 line = line.split('\t')
                 index = int(line[0])
+                self.output_dim += 1
                 # word with multiple expressions
                 if '（' in line[1] and '）' in line[1]:
                     for delimeter in ['（', '）', '、']:
@@ -277,9 +280,12 @@ class CSL_Continuous(Dataset):
         # print(self.unknown)
 
     def read_images(self, folder_path):
+        assert len(os.listdir(folder_path)) >= self.frames, "Too few images in your data folder: " + str(folder_path)
         images = []
-        for i in range(len(os.listdir(folder_path))):
-            image = Image.open(os.path.join(folder_path, '{:06d}.jpg').format(i+1))  #.convert('L')
+        start = 1
+        step = int(len(os.listdir(folder_path))/self.frames)
+        for i in range(self.frames):
+            image = Image.open(os.path.join(folder_path, '{:06d}.jpg').format(start+i*step))  #.convert('L')
             if self.transform is not None:
                 image = self.transform(image)
             images.append(image)
@@ -322,7 +328,7 @@ if __name__ == '__main__':
     # print(dataset.label_to_word(label))
     # dataset[1000]
     dataset = CSL_Continuous(
-        data_path="/mnt/data/liweijie/public_dataset/color_frame",
+        data_path="/home/haodong/Data/CSL_Continuous/color",
         dict_path="/home/haodong/Data/CSL_Continuous/dictionary.txt",
         corpus_path="/home/haodong/Data/CSL_Continuous/corpus.txt",
         train=True, transform=transform
@@ -330,3 +336,4 @@ if __name__ == '__main__':
     print(len(dataset))
     images, tokens = dataset[1000]
     print(images.shape, tokens)
+    print(dataset.output_dim)

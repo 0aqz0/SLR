@@ -14,9 +14,8 @@ Encoder: encode video spatial and temporal dynamics e.g. CNN+LSTM
 Decoder: decode the compressed info from encoder
 """
 class Encoder(nn.Module):
-    def __init__(self, sample_size=128, lstm_hidden_size=512, arch="resnet18"):
+    def __init__(self, lstm_hidden_size=512, arch="resnet18"):
         super(Encoder, self).__init__()
-        self.sample_size = sample_size
         self.lstm_hidden_size = lstm_hidden_size
 
         # network architecture
@@ -152,7 +151,7 @@ class Seq2Seq(nn.Module):
 # Test
 if __name__ == '__main__':
     # test encoder
-    encoder = Encoder(sample_size=128, lstm_hidden_size=512)
+    encoder = Encoder(lstm_hidden_size=512)
     # imgs = torch.randn(16, 3, 8, 128, 128)
     # print(encoder(imgs))
 
