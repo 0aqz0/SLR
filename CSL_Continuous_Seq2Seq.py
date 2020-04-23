@@ -8,10 +8,10 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import torchvision.transforms as transforms
-from sklearn.metrics import accuracy_score
-import numpy as np
 from dataset import CSL_Continuous
 from models.Seq2Seq import Encoder, Decoder, Seq2Seq
+from train import train_seq2seq
+from validation import val_seq2seq
 
 # Path setting
 data_path = "/home/haodong/Data/CSL_Continuous/color"
@@ -74,94 +74,10 @@ if __name__ == '__main__':
     logger.info("Training Started".center(60, '#'))
     for epoch in range(epochs):
         # Train the model
-        model.train()
-        losses = []
-        all_trg = []
-        all_pred = []
-
-        for batch_idx, (imgs, target) in enumerate(train_loader):
-            imgs = imgs.to(device)
-            target = target.to(device)
-
-            optimizer.zero_grad()
-            # forward
-            outputs = model(imgs, target)
-
-            # target: (batch_size, trg len)
-            # outputs: (trg_len, batch_size, output_dim)
-            # skip sos
-            output_dim = outputs.shape[-1]
-            outputs = outputs[1:].view(-1, output_dim)
-            target = target.permute(1,0)[1:].reshape(-1)
-
-            # compute the loss
-            loss = criterion(outputs, target)
-            losses.append(loss.item())
-
-            # compute the accuracy
-            prediction = torch.max(outputs, 1)[1]
-            score = accuracy_score(target.cpu().data.squeeze().numpy(), prediction.cpu().data.squeeze().numpy())
-            all_trg.extend(target)
-            all_pred.extend(prediction)
-
-            # backward & optimize
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
-            optimizer.step()
-
-            if (batch_idx + 1) % log_interval == 0:
-                logger.info("epoch {:3d} | iteration {:5d} | Loss {:.6f} | Acc {:.2f}%".format(epoch+1, batch_idx+1, loss.item(), score*100))
-        
-        # Compute the average loss & accuracy
-        training_loss = sum(losses)/len(losses)
-        all_trg = torch.stack(all_trg, dim=0)
-        all_pred = torch.stack(all_pred, dim=0)
-        training_acc = accuracy_score(all_trg.cpu().data.squeeze().numpy(), all_pred.cpu().data.squeeze().numpy())
-        # Log
-        writer.add_scalars('Loss', {'train': training_loss}, epoch+1)
-        writer.add_scalars('Accuracy', {'train': training_acc}, epoch+1)
-        logger.info("Average Training Loss of Epoch {}: {:.6f} | Acc: {:.2f}%".format(epoch+1, training_loss, training_acc*100))
+        train_seq2seq(model, criterion, optimizer, clip, train_loader, device, epoch, logger, log_interval, writer)
 
         # Validate the model
-        model.eval()
-        losses = []
-        all_trg = []
-        all_pred = []
-
-        with torch.no_grad():
-            for batch_idx, (imgs, target) in enumerate(val_loader):
-                imgs = imgs.to(device)
-                target = target.to(device)
-
-                # forward(no teacher forcing)
-                outputs = model(imgs, target, 0)
-
-                # target: (batch_size, trg len)
-                # outputs: (trg_len, batch_size, output_dim)
-                # skip sos
-                output_dim = outputs.shape[-1]
-                outputs = outputs[1:].view(-1, output_dim)
-                target = target.permute(1,0)[1:].reshape(-1)
-
-                # compute the loss
-                loss = criterion(outputs, target)
-                losses.append(loss.item())
-
-                # compute the accuracy
-                prediction = torch.max(outputs, 1)[1]
-                score = accuracy_score(target.cpu().data.squeeze().numpy(), prediction.cpu().data.squeeze().numpy())
-                all_trg.extend(target)
-                all_pred.extend(prediction)
-
-        # Compute the average loss & accuracy
-        validation_loss = sum(losses)/len(losses)
-        all_trg = torch.stack(all_trg, dim=0)
-        all_pred = torch.stack(all_pred, dim=0)
-        validation_acc = accuracy_score(all_trg.cpu().data.squeeze().numpy(), all_pred.cpu().data.squeeze().numpy())
-        # Log
-        writer.add_scalars('Loss', {'validation': validation_loss}, epoch+1)
-        writer.add_scalars('Accuracy', {'validation': validation_acc}, epoch+1)
-        logger.info("Average Validation Loss of Epoch {}: {:.6f} | Acc: {:.2f}%".format(epoch+1, validation_loss, validation_acc*100))
+        val_seq2seq(model, criterion, val_loader, device, epoch, logger, writer)
 
         # Save model
         torch.save(model.state_dict(), os.path.join(model_path, "slr_seq2seq_epoch{:03d}.pth".format(epoch+1)))
