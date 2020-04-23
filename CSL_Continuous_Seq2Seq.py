@@ -16,6 +16,7 @@ from models.Seq2Seq import Encoder, Decoder, Seq2Seq
 data_path = "/home/haodong/Data/CSL_Continuous/color"
 dict_path = "/home/haodong/Data/CSL_Continuous/dictionary.txt"
 corpus_path = "/home/haodong/Data/CSL_Continuous/corpus.txt"
+model_path = "/home/haodong/Data/seq2seq_models"
 log_path = "log/seq2seq_{:%Y-%m-%d_%H-%M-%S}.log".format(datetime.now())
 sum_path = "runs/slr_seq2seq_{:%Y-%m-%d_%H-%M-%S}".format(datetime.now())
 
@@ -36,7 +37,7 @@ batch_size = 8
 learning_rate = 1e-4
 weight_decay = 1e-5
 sample_size = 128
-sample_duration = 64
+sample_duration = 48
 enc_hid_dim = 512
 emb_dim = 256
 dec_hid_dim = 512
