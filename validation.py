@@ -1,5 +1,6 @@
 import torch
 from sklearn.metrics import accuracy_score
+from tools import wer
 
 def val_epoch(model, criterion, dataloader, device, epoch, logger, writer):
     model.eval()
@@ -38,6 +39,7 @@ def val_seq2seq(model, criterion, dataloader, device, epoch, logger, writer):
     losses = []
     all_trg = []
     all_pred = []
+    all_wer = []
 
     with torch.no_grad():
         for batch_idx, (imgs, target) in enumerate(dataloader):
@@ -64,12 +66,27 @@ def val_seq2seq(model, criterion, dataloader, device, epoch, logger, writer):
             all_trg.extend(target)
             all_pred.extend(prediction)
 
+            # compute wer
+            # prediction: ((trg_len-1)*batch_size)
+            # target: ((trg_len-1)*batch_size)
+            batch_size = imgs.shape[0]
+            prediction = prediction.view(-1, batch_size).permute(1,0).tolist()
+            target = target.view(-1, batch_size).permute(1,0).tolist()
+            wers = []
+            for i in range(batch_size):
+                # add mask(remove padding)
+                prediction[i] = [item for item in prediction[i] if item != 506]
+                target[i] = [item for item in target[i] if item != 506]
+                wers.append(wer(target[i], prediction[i]))
+            all_wer.extend(wers)
+
     # Compute the average loss & accuracy
     validation_loss = sum(losses)/len(losses)
     all_trg = torch.stack(all_trg, dim=0)
     all_pred = torch.stack(all_pred, dim=0)
     validation_acc = accuracy_score(all_trg.cpu().data.squeeze().numpy(), all_pred.cpu().data.squeeze().numpy())
+    validation_wer = sum(all_wer)/len(all_wer)
     # Log
     writer.add_scalars('Loss', {'validation': validation_loss}, epoch+1)
     writer.add_scalars('Accuracy', {'validation': validation_acc}, epoch+1)
-    logger.info("Average Validation Loss of Epoch {}: {:.6f} | Acc: {:.2f}%".format(epoch+1, validation_loss, validation_acc*100))
+    logger.info("Average Validation Loss of Epoch {}: {:.6f} | Acc: {:.2f}% | WER: {:.2f}%".format(epoch+1, validation_loss, validation_acc*100, validation_wer))

@@ -4,16 +4,17 @@ from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import torchvision.transforms as transforms
 import torchvision.utils as utils
-from sklearn.metrics import accuracy_score, confusion_matrix
 from dataset import CSL_Isolated
 from models.Conv3D import resnet18, resnet34, resnet50, r2plus1d_18
-import numpy as np
-import matplotlib.pyplot as plt
-from numpy import savetxt
 import os
+import cv2
 import argparse
 from datetime import datetime
-import cv2
+import numpy as np
+from numpy import savetxt
+import matplotlib.pyplot as plt
+from sklearn.metrics import accuracy_score, confusion_matrix
+
 
 def get_label_and_pred(model, dataloader, device):
     all_label = []
@@ -117,6 +118,38 @@ def plot_attention_map(model, dataloader, device):
                 break
 
 
+"""
+Calculate Word Error Rate
+Word Error Rate = (Substitutions + Insertions + Deletions) / Number of Words Spoken
+Reference:
+https://holianh.github.io/portfolio/Cach-tinh-WER/
+https://github.com/imalic3/python-word-error-rate
+"""
+def wer(r, h):
+    # initialisation
+    d = np.zeros((len(r)+1)*(len(h)+1), dtype=np.uint8)
+    d = d.reshape((len(r)+1, len(h)+1))
+    for i in range(len(r)+1):
+        for j in range(len(h)+1):
+            if i == 0:
+                d[0][j] = j
+            elif j == 0:
+                d[i][0] = i
+
+    # computation
+    for i in range(1, len(r)+1):
+        for j in range(1, len(h)+1):
+            if r[i-1] == h[j-1]:
+                d[i][j] = d[i-1][j-1]
+            else:
+                substitution = d[i-1][j-1] + 1
+                insertion = d[i][j-1] + 1
+                deletion = d[i-1][j] + 1
+                d[i][j] = min(substitution, insertion, deletion)
+
+    return float(d[len(r)][len(h)]) / len(r) * 100
+
+
 # Parameters manager
 parser = argparse.ArgumentParser(description='Visualization')
 parser.add_argument('--data_path', default='/home/haodong/Data/CSL_Isolated/color_video_125000',
@@ -141,6 +174,8 @@ parser.add_argument('--confusion_matrix', action='store_true',
     help='Draw confusion matrix')
 parser.add_argument('--attention_map', action='store_true',
     help='Draw attention map')
+parser.add_argument('--calculate_wer', action='store_true',
+    help='Calculate Word Error Rate')
 args = parser.parse_args()
 
 # Use specific gpus
@@ -180,3 +215,9 @@ if __name__ == '__main__':
     # Draw attention map
     if args.attention_map:
         plot_attention_map(model, test_loader, device)
+
+    # Calculate WER
+    if args.calculate_wer:
+        r = [1,2,3,4]
+        h = [1,1,3,5,6]
+        print(wer(r, h))

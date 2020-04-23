@@ -1,5 +1,6 @@
 import torch
 from sklearn.metrics import accuracy_score
+from tools import wer
 
 def train_epoch(model, criterion, optimizer, dataloader, device, epoch, logger, log_interval, writer):
     model.train()
@@ -50,6 +51,7 @@ def train_seq2seq(model, criterion, optimizer, clip, dataloader, device, epoch, 
     losses = []
     all_trg = []
     all_pred = []
+    all_wer = []
 
     for batch_idx, (imgs, target) in enumerate(dataloader):
         imgs = imgs.to(device)
@@ -76,20 +78,35 @@ def train_seq2seq(model, criterion, optimizer, clip, dataloader, device, epoch, 
         all_trg.extend(target)
         all_pred.extend(prediction)
 
+        # compute wer
+        # prediction: ((trg_len-1)*batch_size)
+        # target: ((trg_len-1)*batch_size)
+        batch_size = imgs.shape[0]
+        prediction = prediction.view(-1, batch_size).permute(1,0).tolist()
+        target = target.view(-1, batch_size).permute(1,0).tolist()
+        wers = []
+        for i in range(batch_size):
+            # add mask(remove padding)
+            prediction[i] = [item for item in prediction[i] if item != 506]
+            target[i] = [item for item in target[i] if item != 506]
+            wers.append(wer(target[i], prediction[i]))
+        all_wer.extend(wers)
+
         # backward & optimize
         loss.backward()
         torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
         optimizer.step()
 
         if (batch_idx + 1) % log_interval == 0:
-            logger.info("epoch {:3d} | iteration {:5d} | Loss {:.6f} | Acc {:.2f}%".format(epoch+1, batch_idx+1, loss.item(), score*100))
+            logger.info("epoch {:3d} | iteration {:5d} | Loss {:.6f} | Acc {:.2f}% | WER {:.2f}%".format(epoch+1, batch_idx+1, loss.item(), score*100, sum(wers)/len(wers)))
 
     # Compute the average loss & accuracy
     training_loss = sum(losses)/len(losses)
     all_trg = torch.stack(all_trg, dim=0)
     all_pred = torch.stack(all_pred, dim=0)
     training_acc = accuracy_score(all_trg.cpu().data.squeeze().numpy(), all_pred.cpu().data.squeeze().numpy())
+    training_wer = sum(all_wer)/len(all_wer)
     # Log
     writer.add_scalars('Loss', {'train': training_loss}, epoch+1)
     writer.add_scalars('Accuracy', {'train': training_acc}, epoch+1)
-    logger.info("Average Training Loss of Epoch {}: {:.6f} | Acc: {:.2f}%".format(epoch+1, training_loss, training_acc*100))
+    logger.info("Average Training Loss of Epoch {}: {:.6f} | Acc: {:.2f}% | WER {:.2f}%".format(epoch+1, training_loss, training_acc*100, training_wer))
