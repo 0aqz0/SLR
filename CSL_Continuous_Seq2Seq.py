@@ -33,7 +33,7 @@ os.environ["CUDA_VISIBLE_DEVICES"]="3"
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Hyperparams
-epochs = 200
+epochs = 100
 batch_size = 8
 learning_rate = 1e-4
 weight_decay = 1e-5
@@ -44,7 +44,7 @@ emb_dim = 256
 dec_hid_dim = 512
 dropout = 0.5
 clip = 1
-log_interval = 20
+log_interval = 100
 
 if __name__ == '__main__':
     # Load data
