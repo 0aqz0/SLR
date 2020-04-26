@@ -8,7 +8,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
 import torchvision.transforms as transforms
-from dataset import CSL_Continuous
+from dataset import CSL_Continuous, CSL_Continuous_Char
 from models.Seq2Seq import Encoder, Decoder, Seq2Seq
 from train import train_seq2seq
 from validation import val_seq2seq
@@ -51,10 +51,14 @@ if __name__ == '__main__':
     transform = transforms.Compose([transforms.Resize([sample_size, sample_size]),
                                     transforms.ToTensor(),
                                     transforms.Normalize(mean=[0.5], std=[0.5])])
-    train_set = CSL_Continuous(data_path=data_path, dict_path=dict_path,
-        corpus_path=corpus_path, frames=sample_duration, train=True, transform=transform)
-    val_set = CSL_Continuous(data_path=data_path, dict_path=dict_path,
-        corpus_path=corpus_path, frames=sample_duration, train=False, transform=transform)
+    # train_set = CSL_Continuous(data_path=data_path, dict_path=dict_path,
+    #     corpus_path=corpus_path, frames=sample_duration, train=True, transform=transform)
+    # val_set = CSL_Continuous(data_path=data_path, dict_path=dict_path,
+    #     corpus_path=corpus_path, frames=sample_duration, train=False, transform=transform)
+    train_set = CSL_Continuous_Char(data_path=data_path, corpus_path=corpus_path,
+        frames=sample_duration, train=True, transform=transform)
+    val_set = CSL_Continuous_Char(data_path=data_path, corpus_path=corpus_path,
+        frames=sample_duration, train=False, transform=transform)
     logger.info("Dataset samples: {}".format(len(train_set)+len(val_set)))
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=16, pin_memory=True)
     val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True, num_workers=16, pin_memory=True)
@@ -80,7 +84,7 @@ if __name__ == '__main__':
         val_seq2seq(model, criterion, val_loader, device, epoch, logger, writer)
 
         # Save model
-        torch.save(model.state_dict(), os.path.join(model_path, "slr_seq2seq_epoch{:03d}.pth".format(epoch+1)))
+        torch.save(model.state_dict(), os.path.join(model_path, "slr_seq2seq_char_epoch{:03d}.pth".format(epoch+1)))
         logger.info("Epoch {} Model Saved".format(epoch+1).center(60, '#'))
 
     logger.info("Training Finished".center(60, '#'))
