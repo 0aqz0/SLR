@@ -75,8 +75,8 @@ def val_seq2seq(model, criterion, dataloader, device, epoch, logger, writer):
             wers = []
             for i in range(batch_size):
                 # add mask(remove padding)
-                prediction[i] = [item for item in prediction[i] if item != 506]
-                target[i] = [item for item in target[i] if item != 506]
+                prediction[i] = [item for item in prediction[i] if item != 0]
+                target[i] = [item for item in target[i] if item != 0]
                 wers.append(wer(target[i], prediction[i]))
             all_wer.extend(wers)
 
