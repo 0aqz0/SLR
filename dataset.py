@@ -209,15 +209,12 @@ class CSL_Continuous(Dataset):
         else:
             self.videos_per_folder = int(0.2 * self.signers * self.repetition)
         # dictionary
-        self.dict = {}
-        self.output_dim = 0
+        self.dict = {'<pad>': 0, '<sos>': 1, '<eos>': 2}
+        self.output_dim = 3
         try:
             dict_file = open(self.dict_path, 'r')
             for line in dict_file.readlines():
-                line = line.strip()
-                line = line.split('\t')
-                index = int(line[0])
-                self.output_dim += 1
+                line = line.strip().split('\t')
                 # word with multiple expressions
                 if '（' in line[1] and '）' in line[1]:
                     for delimeter in ['（', '）', '、']:
@@ -227,7 +224,8 @@ class CSL_Continuous(Dataset):
                     words = [line[1]]
                 # print(words)
                 for word in words:
-                    self.dict[word] = index
+                    self.dict[word] = self.output_dim
+                self.output_dim += 1
         except Exception as e:
             raise
         # img data
@@ -444,17 +442,17 @@ if __name__ == '__main__':
     # label = dataset[1000]['label']
     # print(dataset.label_to_word(label))
     # dataset[1000]
-    # dataset = CSL_Continuous(
-    #     data_path="/home/haodong/Data/CSL_Continuous/color",
-    #     dict_path="/home/haodong/Data/CSL_Continuous/dictionary.txt",
-    #     corpus_path="/home/haodong/Data/CSL_Continuous/corpus.txt",
-    #     train=True, transform=transform
-    #     )
-    dataset = CSL_Continuous_Char(
+    dataset = CSL_Continuous(
         data_path="/home/haodong/Data/CSL_Continuous/color",
+        dict_path="/home/haodong/Data/CSL_Continuous/dictionary.txt",
         corpus_path="/home/haodong/Data/CSL_Continuous/corpus.txt",
         train=True, transform=transform
         )
+    # dataset = CSL_Continuous_Char(
+    #     data_path="/home/haodong/Data/CSL_Continuous/color",
+    #     corpus_path="/home/haodong/Data/CSL_Continuous/corpus.txt",
+    #     train=True, transform=transform
+    #     )
     print(len(dataset))
     images, tokens = dataset[1000]
     print(images.shape, tokens)
