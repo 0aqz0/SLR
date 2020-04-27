@@ -1,19 +1,12 @@
 import torch
 import torch.nn.functional as F
-from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-import torchvision.transforms as transforms
 import torchvision.utils as utils
-from dataset import CSL_Isolated
-from models.Conv3D import resnet18, resnet34, resnet50, r2plus1d_18
-import os
 import cv2
-import argparse
 from datetime import datetime
 import numpy as np
-from numpy import savetxt
 import matplotlib.pyplot as plt
-from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.metrics import confusion_matrix
 
 
 def get_label_and_pred(model, dataloader, device):
@@ -70,7 +63,7 @@ def plot_confusion_matrix(model, dataloader, device, save_path='confmat.png', no
         # print(type(sorted_index[i]))
         print(test_set.label_to_word(int(sorted_index[i])), confmat[sorted_index[i]][sorted_index[i]])
     # Save to csv
-    savetxt('matrix.csv', confmat, delimiter=',')
+    np.savetxt('matrix.csv', confmat, delimiter=',')
 
 
 def visualize_attn(I, c):
@@ -150,74 +143,8 @@ def wer(r, h):
     return float(d[len(r)][len(h)]) / len(r) * 100
 
 
-# Parameters manager
-parser = argparse.ArgumentParser(description='Visualization')
-parser.add_argument('--data_path', default='/home/haodong/Data/CSL_Isolated/color_video_125000',
-    type=str, help='Path to data')
-parser.add_argument('--label_path', default='/home/haodong/Data/CSL_Isolated/dictionary.txt',
-    type=str, help='Path to labels')
-parser.add_argument('--model', default='resnet18',
-    type=str, help='Model to use')
-parser.add_argument('--checkpoint', default='/home/haodong/Data/visualize_models/resnet18.pth',
-    type=str, help='Path to checkpoint')
-parser.add_argument('--device', default='0',
-    type=str, help='CUDA visible devices')
-parser.add_argument('--num_classes', default=100,
-    type=int, help='Number of classes')
-parser.add_argument('--batch_size', default=16,
-    type=int, help='Batch size')
-parser.add_argument('--sample_size', default=128,
-    type=int, help='Sample size')
-parser.add_argument('--sample_duration', default=16,
-    type=int, help='Sample duration')
-parser.add_argument('--confusion_matrix', action='store_true',
-    help='Draw confusion matrix')
-parser.add_argument('--attention_map', action='store_true',
-    help='Draw attention map')
-parser.add_argument('--calculate_wer', action='store_true',
-    help='Calculate Word Error Rate')
-args = parser.parse_args()
-
-# Use specific gpus
-os.environ["CUDA_VISIBLE_DEVICES"] = args.device
-# Device setting
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-# Hyperparams
-num_classes = args.num_classes
-batch_size = args.batch_size
-sample_size = args.sample_size
-sample_duration = args.sample_duration
-
 if __name__ == '__main__':
-    # Load data
-    transform = transforms.Compose([transforms.Resize([sample_size, sample_size]),
-                                    transforms.ToTensor(),
-                                    transforms.Normalize(mean=[0.5], std=[0.5])])
-    test_set = CSL_Isolated(data_path=args.data_path, label_path=args.label_path, frames=sample_duration,
-        num_classes=num_classes, train=False, transform=transform)
-    test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
-    # Create model
-    if args.model == 'resnet18':
-        model = resnet18(pretrained=True, progress=True, sample_size=sample_size,
-            sample_duration=sample_duration, attention=args.attention_map, num_classes=num_classes).to(device)
-    # Run the model parallelly
-    if torch.cuda.device_count() > 1:
-        logger.info("Using {} GPUs".format(torch.cuda.device_count()))
-        model = nn.DataParallel(model)
-    # Load model
-    model.load_state_dict(torch.load(args.checkpoint))
-
-    # Draw confusion matrix
-    if args.confusion_matrix:
-        plot_confusion_matrix(model, test_loader, device)
-
-    # Draw attention map
-    if args.attention_map:
-        plot_attention_map(model, test_loader, device)
-
     # Calculate WER
-    if args.calculate_wer:
-        r = [1,2,3,4]
-        h = [1,1,3,5,6]
-        print(wer(r, h))
+    r = [1,2,3,4]
+    h = [1,1,3,5,6]
+    print(wer(r, h))
