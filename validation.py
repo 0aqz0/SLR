@@ -74,9 +74,9 @@ def val_seq2seq(model, criterion, dataloader, device, epoch, logger, writer):
             target = target.view(-1, batch_size).permute(1,0).tolist()
             wers = []
             for i in range(batch_size):
-                # add mask(remove padding)
-                prediction[i] = [item for item in prediction[i] if item != 0]
-                target[i] = [item for item in target[i] if item != 0]
+                # add mask(remove padding, eos, sos)
+                prediction[i] = [item for item in prediction[i] if item not in [0,1,2]]
+                target[i] = [item for item in target[i] if item not in [0,1,2]]
                 wers.append(wer(target[i], prediction[i]))
             all_wer.extend(wers)
 
@@ -89,4 +89,5 @@ def val_seq2seq(model, criterion, dataloader, device, epoch, logger, writer):
     # Log
     writer.add_scalars('Loss', {'validation': validation_loss}, epoch+1)
     writer.add_scalars('Accuracy', {'validation': validation_acc}, epoch+1)
+    writer.add_scalars('WER', {'validation': validation_wer}, epoch+1)
     logger.info("Average Validation Loss of Epoch {}: {:.6f} | Acc: {:.2f}% | WER: {:.2f}%".format(epoch+1, validation_loss, validation_acc*100, validation_wer))

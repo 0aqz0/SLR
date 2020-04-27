@@ -86,9 +86,9 @@ def train_seq2seq(model, criterion, optimizer, clip, dataloader, device, epoch, 
         target = target.view(-1, batch_size).permute(1,0).tolist()
         wers = []
         for i in range(batch_size):
-            # add mask(remove padding)
-            prediction[i] = [item for item in prediction[i] if item != 0]
-            target[i] = [item for item in target[i] if item != 0]
+            # add mask(remove padding, sos, eos)
+            prediction[i] = [item for item in prediction[i] if item not in [0,1,2]]
+            target[i] = [item for item in target[i] if item not in [0,1,2]]
             wers.append(wer(target[i], prediction[i]))
         all_wer.extend(wers)
 
@@ -109,4 +109,5 @@ def train_seq2seq(model, criterion, optimizer, clip, dataloader, device, epoch, 
     # Log
     writer.add_scalars('Loss', {'train': training_loss}, epoch+1)
     writer.add_scalars('Accuracy', {'train': training_acc}, epoch+1)
+    writer.add_scalars('WER', {'train': training_wer}, epoch+1)
     logger.info("Average Training Loss of Epoch {}: {:.6f} | Acc: {:.2f}% | WER {:.2f}%".format(epoch+1, training_loss, training_acc*100, training_wer))
