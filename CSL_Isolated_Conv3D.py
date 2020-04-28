@@ -12,7 +12,7 @@ import torchvision.transforms as transforms
 from models.Conv3D import CNN3D, resnet18, resnet34, resnet50, resnet101, r2plus1d_18
 from dataset import CSL_Isolated
 from train import train_epoch
-from test import test
+from validation import val_epoch
 
 # Path setting
 data_path = "/home/haodong/Data/CSL_Isolated/color_video_125000"
@@ -52,11 +52,11 @@ if __name__ == '__main__':
                                     transforms.Normalize(mean=[0.5], std=[0.5])])
     train_set = CSL_Isolated(data_path=data_path, label_path=label_path, frames=sample_duration,
         num_classes=num_classes, train=True, transform=transform)
-    test_set = CSL_Isolated(data_path=data_path, label_path=label_path, frames=sample_duration,
+    val_set = CSL_Isolated(data_path=data_path, label_path=label_path, frames=sample_duration,
         num_classes=num_classes, train=False, transform=transform)
-    logger.info("Dataset samples: {}".format(len(train_set)+len(test_set)))
+    logger.info("Dataset samples: {}".format(len(train_set)+len(val_set)))
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=16, pin_memory=True)
-    test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=True, num_workers=16, pin_memory=True)
+    val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True, num_workers=16, pin_memory=True)
     # Create model
     # model = CNN3D(sample_size=sample_size, sample_duration=sample_duration, drop_p=drop_p,
     #             hidden1=hidden1, hidden2=hidden2, num_classes=num_classes).to(device)
@@ -77,8 +77,8 @@ if __name__ == '__main__':
         # Train the model
         train_epoch(model, criterion, optimizer, train_loader, device, epoch, logger, log_interval, writer)
 
-        # Test the model
-        test(model, criterion, test_loader, device, epoch, logger, writer)
+        # Validate the model
+        val_epoch(model, criterion, val_loader, device, epoch, logger, writer)
 
         # Save model
         torch.save(model.state_dict(), os.path.join(model_path, "slr_cnn3d_epoch{:03d}.pth".format(epoch+1)))
