@@ -21,7 +21,7 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
 
    | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
    | ------------ | ------- | ------- | ------------- | -------------- |
-   | CSL_Isolated | 100     | 25,000  | 92.06%        | 0.279240       |
+   | CSL_Isolated | 100     | 25,000  | 93.54%        | 0.245582       |
    | CSL_Isolated | 500     | 125,000 | 83.17%        | 0.748759       |
 
 ### 3D CNN
@@ -67,8 +67,12 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
 | CSL_Skeleton | 100     | 25,000  | 84.30%        | 0.488253       |
 | CSL_Skeleton | 500     | 125,000 | 70.62%        | 1.078730       |
 
-## Todos
+## References
 
-- seq-to-seq learning
-- CTC loss
+- [Can Spatiotemporal 3D CNNs Retrace the History of 2D CNNs and ImageNet?](https://arxiv.org/pdf/1711.09577.pdf)
 
+- [Spatial Temporal Graph Convolutional Networks for Skeleton-Based Action Recognition](https://arxiv.org/pdf/1801.07455.pdf)
+- [A Closer Look at Spatiotemporal Convolutions for Action Recognition](https://arxiv.org/abs/1711.11248)
+- [SIGN LANGUAGE RECOGNITION WITH LONG SHORT-TERM MEMORY](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=7532884)
+- https://github.com/HHTseng/video-classification
+- https://github.com/kenshohara/3D-ResNets-PyTorch
