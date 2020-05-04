@@ -51,14 +51,14 @@ if __name__ == '__main__':
     transform = transforms.Compose([transforms.Resize([sample_size, sample_size]),
                                     transforms.ToTensor(),
                                     transforms.Normalize(mean=[0.5], std=[0.5])])
-    train_set = CSL_Continuous(data_path=data_path, dict_path=dict_path,
-        corpus_path=corpus_path, frames=sample_duration, train=True, transform=transform)
-    val_set = CSL_Continuous(data_path=data_path, dict_path=dict_path,
-        corpus_path=corpus_path, frames=sample_duration, train=False, transform=transform)
-    # train_set = CSL_Continuous_Char(data_path=data_path, corpus_path=corpus_path,
-    #     frames=sample_duration, train=True, transform=transform)
-    # val_set = CSL_Continuous_Char(data_path=data_path, corpus_path=corpus_path,
-    #     frames=sample_duration, train=False, transform=transform)
+    # train_set = CSL_Continuous(data_path=data_path, dict_path=dict_path,
+    #     corpus_path=corpus_path, frames=sample_duration, train=True, transform=transform)
+    # val_set = CSL_Continuous(data_path=data_path, dict_path=dict_path,
+    #     corpus_path=corpus_path, frames=sample_duration, train=False, transform=transform)
+    train_set = CSL_Continuous_Char(data_path=data_path, corpus_path=corpus_path,
+        frames=sample_duration, train=True, transform=transform)
+    val_set = CSL_Continuous_Char(data_path=data_path, corpus_path=corpus_path,
+        frames=sample_duration, train=False, transform=transform)
     logger.info("Dataset samples: {}".format(len(train_set)+len(val_set)))
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=16, pin_memory=True)
     val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True, num_workers=16, pin_memory=True)

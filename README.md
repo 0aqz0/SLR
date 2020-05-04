@@ -1,12 +1,14 @@
 # SLR
-sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
+Isolated sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
+
+Continuous sign language recognition using encoder-decoder
 
 ## Requirements
 
 - Download and extract **[CSL Dataset](http://home.ustc.edu.cn/~pjh/openresources/cslr-dataset-2015/index.html)**
 - Download and install **[PyTorch](https://pytorch.org/)**
 
-## Models
+## Isolated Sign Language Recognition
 
 ### CNN+LSTM
 
@@ -67,6 +69,17 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
 | CSL_Skeleton | 100     | 25,000  | 84.30%        | 0.488253       |
 | CSL_Skeleton | 500     | 125,000 | 70.62%        | 1.078730       |
 
+## Continuous Sign Language Recognition
+
+### Encoder-Decoder
+
+*Encoder is ResNet18+LSTM, and Decoder is LSTM*
+
+| Dataset             | Sentences | Samples | Best Test Wer | Best Test Loss |
+| ------------------- | --------- | ------- | ------------- | -------------- |
+| CSL_Continuous      | 100       | 25,000  | 1.01%         | 0.034636       |
+| CSL_Continuous_Char | 100       | 25,000  | 1.19%         | 0.049449       |
+
 ## References
 
 - [Can Spatiotemporal 3D CNNs Retrace the History of 2D CNNs and ImageNet?](https://arxiv.org/pdf/1711.09577.pdf)
@@ -76,3 +89,6 @@ sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
 - [SIGN LANGUAGE RECOGNITION WITH LONG SHORT-TERM MEMORY](https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=7532884)
 - https://github.com/HHTseng/video-classification
 - https://github.com/kenshohara/3D-ResNets-PyTorch
+
+- https://github.com/bentrevett/pytorch-seq2seq
+
