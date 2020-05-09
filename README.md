@@ -1,7 +1,5 @@
 # SLR
-Isolated sign language recognition using CNN+LSTM, 3D CNN, GCN and their variants
-
-Continuous sign language recognition using encoder-decoder
+isolated & continuous sign language recognition using CNN+LSTM/3D CNN/GCN/Encoder-Decoder
 
 ## Requirements
 
@@ -52,8 +50,8 @@ Continuous sign language recognition using encoder-decoder
 
    | Dataset      | Classes | Samples | Best Test Acc | Best Test Loss |
    | ------------ | ------- | ------- | ------------- | -------------- |
-   | CSL_Isolated | 100     | 25,000  | 0.043099      | 98.68%         |
-   | CSL_Isolated | 500     | 125,000 | 0.234880      | 94.85%         |
+   | CSL_Isolated | 100     | 25,000  | 98.68%        | 0.043099       |
+   | CSL_Isolated | 500     | 125,000 | 94.85%        | 0.234880       |
 
 ### GCN
 
