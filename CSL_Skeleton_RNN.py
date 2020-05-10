@@ -8,7 +8,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 from torch.utils.tensorboard import SummaryWriter
-from models.LSTM import LSTM
+from models.RNN import LSTM, GRU
 from dataset import CSL_Skeleton
 from train import train_epoch
 from validation import val_epoch
@@ -39,13 +39,13 @@ log_interval = 20
 num_classes = 100
 sample_duration = 16
 selected_joints = ['HANDLEFT', 'HANDRIGHT', 'ELBOWLEFT', 'ELBOWRIGHT']
-lstm_input_size = len(selected_joints)*2
-lstm_hidden_size = 512
-lstm_num_layers = 1
+input_size = len(selected_joints)*2
+hidden_size = 512
+num_layers = 1
 hidden1 = 512
 drop_p = 0.0
 
-# Train with Skeleton+LSTM
+# Train with Skeleton+RNN
 if __name__ == '__main__':
     # Load data
     transform = None # TODO
@@ -57,7 +57,9 @@ if __name__ == '__main__':
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True, num_workers=4, pin_memory=True)
     # Create model
-    model = LSTM(lstm_input_size=lstm_input_size, lstm_hidden_size=lstm_hidden_size, lstm_num_layers=lstm_num_layers,
+    # model = LSTM(lstm_input_size=input_size, lstm_hidden_size=hidden_size, lstm_num_layers=num_layers,
+    #     num_classes=num_classes, hidden1=hidden1, drop_p=drop_p).to(device)
+    model = GRU(gru_input_size=input_size, gru_hidden_size=hidden_size, gru_num_layers=num_layers,
         num_classes=num_classes, hidden1=hidden1, drop_p=drop_p).to(device)
     # Run the model parallelly
     if torch.cuda.device_count() > 1:
